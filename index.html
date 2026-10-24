@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tank Duell</title>
+<style>
+:root{box-sizing:border-box;--bg:#e9ecf0;--fg:#1b2430;--mut:#7d8896;--card:#f8f9fb;--line:#c9d0d9;--p1:#2a6fdb;--p2:#e8742a;--p1b:#1fb5b0;
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141a;--fg:#e6ebf2;--mut:#6f7c8c;--card:#1a2029;--line:#2c3541;--p1:#5b9bff;--p2:#ff9a52;--p1b:#4fd8d0}}
+:root[data-theme="dark"]{--bg:#10141a;--fg:#e6ebf2;--mut:#6f7c8c;--card:#1a2029;--line:#2c3541;--p1:#5b9bff;--p2:#ff9a52;--p1b:#4fd8d0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 14px}
+h1{margin:0;font-size:1.5rem;font-weight:700;letter-spacing:-.01em}
+.sb{display:flex;gap:28px;font-size:1.1rem;font-weight:600}
+.sb b{font-size:1.5rem;font-variant-numeric:tabular-nums}
+.p1{color:var(--p1)}.p2{color:var(--p2)}
+canvas{width:100%;max-width:840px;height:auto;background:var(--card);border:2px solid var(--line);border-radius:6px;display:block}
+.help{max-width:840px;margin:0;font-size:.9rem;line-height:1.5;color:var(--mut);text-align:center}
+.help b{color:var(--fg)}
+.help.tl,.help.kbd,#bhelp,#ehelp,#xhelp{display:none!important}
+#startov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35)}
+#sgo{font:inherit;font-size:1.7rem;font-weight:800;padding:20px 60px;border-radius:16px;border:0;background:var(--p1);color:var(--bg);cursor:pointer}
+#bbuild{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:840px}
+#hud{display:flex;gap:12px;align-items:center;justify-content:space-between;width:100%;max-width:840px}
+#hudtxt{font-weight:700;font-size:.92rem;line-height:1.35}
+#mini{width:128px;height:auto;flex:none;background:var(--card);border:1px solid var(--line);border-radius:4px}
+#abil{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;width:100%;max-width:840px}
+#abil .btn{flex:1 1 0;min-width:0;padding:4px 3px;min-height:42px;font-size:.72rem;line-height:1.2;white-space:pre-line;border-radius:8px}
+#game.fill{min-height:calc(100vh - 36px)}
+#game.fill h1{display:none}
+#game.fill #c{margin:auto 0}
+#helpov{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.hbox{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:18px;max-width:520px;max-height:85vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.hbox p{margin:0;font-size:.95rem;line-height:1.5}
+.hbox b{color:var(--fg)}
+.row{flex-wrap:wrap;justify-content:center}
+.btn.sel{background:var(--p1);color:var(--bg);border-color:var(--p1)}
+.btn:disabled{opacity:.4;cursor:default}
+#bpanel{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
+[hidden]{display:none!important}
+#game{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+.row{display:flex;gap:10px}
+#menu{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:520px;margin-top:6vh}
+.mt{font-size:2.2rem;font-weight:800;letter-spacing:-.02em}
+.ms{margin:0 0 6px;color:var(--mut)}
+.mode{width:100%;text-align:left;font:inherit;padding:16px 18px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+.mode:hover,.mode:focus-visible{border-color:var(--p1)}
+.mode b{display:block;font-size:1.15rem;margin-bottom:4px}
+.mode span{font-size:.9rem;line-height:1.4;color:var(--mut)}
+#mode,#back,#helpBtn,#snd,.btn{font:inherit;font-size:.9rem;padding:7px 14px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+.touch,.tl{display:none}
+.touch{width:100%;max-width:840px;justify-content:space-between;align-items:center;padding:4px 6px;touch-action:none;user-select:none;-webkit-user-select:none}
+@media (pointer:coarse){.touch{display:flex}.tl{display:block}.kbd{display:none}}
+.touch button{font:inherit;font-size:1.4rem;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);touch-action:none;-webkit-tap-highlight-color:transparent}
+.touch .fire{width:96px;height:96px;flex:none;border-radius:50%;font-size:1.05rem;font-weight:700;background:var(--p1);color:var(--bg);border:0}
+.touch .fire.on{opacity:.65}
+.touch .skill{min-width:76px;height:76px;padding:0 10px;flex:none;border-radius:38px;font-size:.8rem;font-weight:700;line-height:1.15;background:var(--p1b);color:var(--bg);border:0}
+.touch .skill.used{opacity:.3}
+#joy{position:relative;width:132px;height:132px;flex:none;border-radius:50%;background:var(--card);border:2px solid var(--line);touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:var(--p1);pointer-events:none}
+@media (pointer:coarse) and (orientation:landscape){h1{display:none}canvas{max-width:min(100%,calc((100vh - 100px)*1.5556))}.touch{position:fixed;left:0;right:0;bottom:0;width:auto;max-width:none;padding:0 14px calc(10px + env(safe-area-inset-bottom,0px));pointer-events:none;z-index:5}.touch button,#joy{pointer-events:auto;opacity:.85}#joy{width:112px;height:112px}#knob{width:48px;height:48px;margin:-24px 0 0 -24px}}
+</style>
+</head>
+<body>
+<div id="helpov" hidden><div class="hbox"><b>Anleitung</b><div id="helptxt"></div><button class="btn" id="hclose" type="button">Schließen</button></div></div>
+<div id="startov" hidden><button id="sgo" type="button">Start</button></div>
+<div id="menu">
+<div class="mt">Tank Duell</div>
+<p class="ms">Schwierigkeit</p>
+<div class="row" id="diffrow"><button class="btn" data-d="0" type="button">Leicht</button><button class="btn sel" data-d="1" type="button">Mittel</button><button class="btn" data-d="2" type="button">Schwer</button></div>
+<p class="ms">Wähle einen Spielmodus</p>
+<button class="mode" id="start-duell" type="button"><b>Duell</b><span>Du und bis zu zwei Hilfs-Bots gegen einen schnellen Gegner, der Kugeln ausweicht und über Wand schießt. Gegen den Bot oder zu zweit am selben Gerät.</span></button>
+<button class="mode" id="start-battle" type="button"><b>Schlacht</b><span>Größeres Labyrinth: Platziere dich und 16 Bots in deiner Hälfte und gib jedem den Befehl Angreifen oder Stellung halten. Der Gegner hat 17 gleich starke Bots und denkt sich eine eigene Strategie aus. Wer das andere Team komplett besiegt, gewinnt.</span></button>
+<button class="mode" id="start-endless" type="button"><b>Endlosschlacht</b><span>Allein gegen immer stärkere Wellen in einem Labyrinth ohne Ende, das sich selbst weitergeneriert. Verdiene dir mit Abschüssen Punkte für Salve, Hilfsbots und Artillerie. Wie weit kommst du?</span></button>
+<button class="mode" id="start-base" type="button"><b>Basis verteidigen</b><span>Verteidige den Turm in der Mitte deiner runden Basis gegen Wellen von Angreifern. Zwischen den Wellen baust du Mauern aus, stellst Geschütze, Soldaten und Artillerie auf und reparierst, was kaputtgegangen ist.</span></button>
+<p class="ms" id="recs"></p>
+</div>
+<div id="game" hidden>
+<h1>Tank Duell</h1>
+<div class="sb"><span class="p1">Spieler 1 <b id="s1">0</b></span><span class="p2"><b id="s2">0</b> <span id="n2">Bot</span></span></div>
+<div class="row"><button id="mode" type="button"></button><button id="back" type="button">Menü</button><button id="helpBtn" type="button">Anleitung</button><button id="snd" type="button"></button></div>
+<div id="hud" hidden><div id="hudtxt"></div><canvas id="mini" width="240" height="142"></canvas></div>
+<canvas id="c"></canvas>
+<div id="abil" hidden><button class="btn" data-a="salvo" type="button">1 Salve (3)</button><button class="btn" data-a="helpers" type="button">2 Hilfsbots (6, ab Wave 2)</button><button class="btn" data-a="arty" type="button">3 Artillerie (10, ab Wave 3)</button><button class="btn" data-a="elite" type="button">4 Elite-Bots</button><button class="btn" data-a="joker" type="button">5 Joker</button><button class="btn" data-a="turret" type="button">6 Geschütz</button><button class="btn" data-a="army" type="button">7 Armee</button></div>
+<div id="bbuild" hidden>
+<div class="row"><button class="btn sel" data-t="fix" type="button">Reparieren / Upgrade</button><button class="btn" data-t="turret" type="button">Geschütz (15)</button><button class="btn" data-t="soldat" type="button">Soldat (10)</button><button class="btn" data-t="arty" type="button">Artillerie (30)</button><button class="btn" data-t="wall" type="button">Mauer (8)</button><button class="btn" data-t="tesla" type="button">Tesla (25)</button></div>
+<p class="help" id="bmsg">Wähle ein Werkzeug und tippe auf die Basis.</p>
+<button class="btn" id="bwave" type="button">Welle starten</button>
+</div>
+<div id="bpanel" hidden>
+<div class="row"><button class="btn sel" id="ordA" type="button">▶ Angreifen</button><button class="btn" id="ordH" type="button">■ Stellung halten</button></div>
+<div class="row" id="typerow"><button class="btn sel" data-ty="std" type="button">Normal</button><button class="btn" data-ty="sniper" type="button">Sniper</button><button class="btn" data-ty="heavy" type="button">Schwer</button><button class="btn" data-ty="melee" type="button">Nahkampf</button></div>
+<p class="help" id="bhint"></p>
+<div class="row"><button class="btn" id="bauto" type="button">Automatisch</button><button class="btn" id="breset" type="button">Zurücksetzen</button><button class="btn" id="bgo" type="button" disabled>Kampf starten</button></div>
+</div>
+<p class="help" id="bhelp" hidden>Steuerung: Joystick links, Schuss-Knopf rechts (am Computer W, A, S, D und Leertaste). Du und deine 16 Bots gegen 17 gleich starke Gegner-Bots. Stirbst du, übernimmst du möglichst einen normalen Panzer im Angriffsmodus. Deine Bots wählst du aus: viele Normale und je ein paar Sniper, Schwere und Nahkämpfer. ■ hält die Stellung und schießt, ▶ rückt vor. Sind alle Angreifer eines Teams besiegt, rücken die Haltenden nacheinander ebenfalls vor. Stirbst du, steuerst du den nächsten Bot. Der Knopf in der Mitte (am Computer E) sammelt alle deine angreifenden Bots (▶) in einer Reihe hinter dir, ein zweiter Druck schickt sie wieder los. Wer das andere Team komplett besiegt, gewinnt. Rechts oben zeigt eine Minikarte dich (weißer Ring), dein Team und die Gegner, die gerade in deinem Bild sind. Auf Schwer können Gegner den Schüssen haltender Bots oft ausweichen, und einige feuern angekündigte Salven.</p>
+<p class="help" id="ehelp" hidden>Endlosschlacht: Du gegen immer größere Wellen von Panzern in einem Labyrinth ohne Ende. Steuerung wie im Duell. Jeder besiegte Gegner gibt dir einen Punkt, egal wodurch er stirbt. Fähigkeiten (Tasten 1 bis 7 oder die Knöpfe unter dem Feld, die Kosten stehen auf den Knöpfen und sind auf Leicht und Mittel niedriger): Salve, Hilfsbots (ab Wave 2), Artillerie (ab Wave 3) und Elite-Bots (ab Wave 4): drei schnellere Bots, die besser ausweichen, deren Kugeln zweimal abprallen und die selbst Salven feuern. Geschütz (ab Wave 2): steht fest und schießt doppelt so schnell wie ein Panzer. Armee (ab Wave 5): 12 Bots, 2 bei dir und 10 gestaffelt vom Rand. Der mittlere Knopf (Taste E) sammelt alle deine Bots hinter dir, ein zweiter Druck schickt sie wieder los. Joker (ab Wave 3, nur einer auf Vorrat): Bei deinem Tod stirbst du nicht, sondern bist 3 Sekunden unverwundbar. Die Artillerie verfolgt 4 bis 5 Gegner, die Salve prallt auf Leicht dreimal und auf Mittel zweimal ab. Hilfsbots werden mit den Waves stärker. Auf Leicht und Mittel nutzen auch die normalen Hilfsbots Abprallwinkel, auf Leicht weichen sie zusätzlich aus. Die ersten Wellen sind langsam und ungenau, ab Wave 5 werden Gegner schneller und nutzen Abprallwinkel. Gegnertypen: Sniper (ab Wave 3, trifft auf große Entfernung und bleibt auf Abstand), Nahkämpfer (ab Wave 4, schnell, weicht gut aus, schießt schnell) und Schwere Panzer (ab Wave 6, brauchen zwei Treffer). Auf Leicht siehst du alle Gegner auf der Minikarte. Ohne Sammelbefehl teilen sich deine Hilfsbots in Gruppen zu 3 bis 5 auf und ziehen einzeln umher. Je nach Stufe feuern Gegner Salven auf dichte Truppenansammlungen. Stirbst du, ist das Spiel vorbei und du beginnst wieder bei Wave 1. Deine Bots übernimmst du nicht. Die Schwierigkeit bestimmt, wie schnell die Gegner nach Sichtkontakt reagieren und wie viele Sackgassen das Labyrinth hat (Leicht und Mittel wenige, Schwer mehr).</p>
+<p class="help" id="xhelp" hidden>Basis verteidigen: Verteidige den Turm in der Mitte deiner runden Basis gegen Wellen von Angreifern. Um die Basis liegt ein Labyrinth, das mit dir wächst und erst am Rundenende verschwindet. Steuerung wie im Duell. Zwischen den Wellen hast du Zeit zum Bauen, tippe dazu auf das Feld: Mit "Reparieren / Upgrade" stellst du Mauerstücke, den Turm und deine Einheiten wieder her oder verbesserst sie (zerstörte Mauerstücke baust du neu auf). Mit dem Werkzeug Mauer erweiterst du die Mauer nach außen. Jedes Quadrat der Basis nimmt genau eine Einheit auf, in der Mitte des Quadrats. Sind alle belegt, kannst du nur noch verbessern. Von innen schießt nur die Artillerie über die Mauer. Geschütze und Tesla-Türme auf Mauerstücken erreichen Gegner innerhalb und außerhalb der Basis und gehen erst kaputt, wenn ihr Mauerstück fällt. Von jeder Waffe gibt es nur eine begrenzte Anzahl: wenig Artillerie, mehr Geschütze und Tesla-Türme, viele Soldaten. Der Tesla-Turm erfasst bis zu 3 Gegner gleichzeitig mit blauen Strahlen, wer insgesamt 2 Sekunden getroffen wird, fällt (die Kreise zeigen Reichweiten). Soldaten teilen sich geordnet auf die bedrohten Mauerstücke auf und weichen Kugeln aus. Bricht eine Mauer, stürmen sie durch die Lücke, besiegen die Gegner und kehren danach zurück (in der Aufbauphase stehen sie wieder auf ihrem Platz). Die Gegner greifen von mehreren Seiten an, konzentrieren sich auf einzelne Mauerstücke und beschießen die Mauer später aus größerem Abstand. Abprallende Kugeln der Mauer-Geschütze verschwinden an deiner Mauer. Zerstörte Mauerstücke baust du an derselben Stelle neu auf. Auf Leicht ist der Start besonders großzügig: viel Schrott und niedrige Preise. Artillerie beschießt Feinde außerhalb der Mauer. Schrott bekommst du für Abschüsse und geschaffte Wellen. Stirbst du, erscheinst du nach 3 Sekunden am Turm. Fällt der Turm, ist das Spiel vorbei.</p>
+<p class="help" id="binfo"></p>
+<div class="touch" id="touch">
+<div id="joy" aria-label="Joystick"><div id="knob"></div></div>
+<button id="skill" class="skill" type="button">2 Bots</button>
+<button data-k="Space" class="fire">Schuss</button>
+</div>
+<p class="help tl">Joystick links: Der Panzer dreht sich in die Richtung, in die du ziehst, und fährt los. Je weiter du ziehst, desto schneller. Schuss rechts. Der mittlere Knopf ruft einmal pro Runde zwei Hilfs-Bots. Kugeln prallen einmal ab und verschwinden beim nächsten Wandkontakt, deine eigenen Kugeln können dich nicht treffen, Bots schießen nur, wenn die Kugel nicht auf sie zurückprallt. Mit dem Handy quer ist die Arena größer.</p>
+<p class="help kbd"><b>Spieler 1:</b> W A S D fahren, Leertaste schießen, E ruft einmal pro Runde zwei Hilfs-Bots. <b>Spieler 2</b> (nur im Zwei-Spieler-Modus): Pfeiltasten fahren, Enter schießen. Kugeln prallen einmal ab und verschwinden beim nächsten Wandkontakt, deine eigenen Kugeln können dich nicht treffen, Bots schießen nur, wenn die Kugel nicht auf sie zurückprallt. Stirbst du, steuerst du den nächsten Hilfs-Bot. Ab Schwierigkeit Mittel feuert der Gegner regelmäßig eine Salve aus 3 bis 4 Kugeln (nur auf Mittel blinkt ein Ring um ihn auf). R startet neu und setzt die Punkte zurück.</p>
+</div>
+<script>
+let C=14,R=9,S=60,AW=0,AH=0,VW=840,VH=540;const T=6;
+function setSize(c,r,s=60){C=c;R=r;S=s;AW=C*S;AH=R*S}
+setSize(14,9);
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+cv.width=VW;cv.height=VH;
+const skillBtn=document.getElementById('skill');
+let hw,vw,rects,tanks,bullets,col,score=[0,0],msg='',resetAt=0,bot=true,me=0,used=false,running=false,mode='duel',phase='fight',pickOrder='attack',planCnt=0,fightT0=0,lastPlace=[],gather=false,gq=[],myKills=0,wave=1,kills=0,pts=0,waveOver=0,queue=0,shells=[],fx=[],best=0,lastHud='',msgT=0,joker=false,invT=0,smartMode=null,clumpMode=false,armyQ=[],paused=false,bEnd=0,respawnAt=0,btool='fix',walls=[],towerRect=null,etNext=0,etac='',etPrev='',etHoldN=0,rgNext=0,ggoal=[],zaps=[],focus=[],fa=0,sdc=0,threats=[],thNext=0,spNext=0,sCount=0,pickType='std';
+const joy={s:0,ang:0};
+const rnd=n=>Math.floor(Math.random()*n);
+
+// ---- Ton und Vibration (Web Audio, kurze synthetische Klänge; per Knopf abschaltbar) ----
+let sndOn=true,AC=null,lastSnd={},rec={};
+try{sndOn=localStorage.getItem('tdSnd')!=='0';rec=JSON.parse(localStorage.getItem('tdRec')||'{}')}catch(e){}
+function ac(){
+  if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}
+  if(AC&&AC.state==='suspended')AC.resume();
+  return AC;
+}
+function sfx(k){
+  if(!sndOn)return;
+  const now=performance.now();
+  if(lastSnd[k]&&now-lastSnd[k]<(k==='kill'?70:k==='shot'?60:0))return;
+  lastSnd[k]=now;
+  const a=ac();
+  if(!a)return;
+  const P={shot:[520,.05,'square',.04,.6],kill:[170,.18,'sawtooth',.06,.5],hit:[95,.35,'sawtooth',.09,.5],wave:[600,.25,'triangle',.07,1.6],win:[780,.4,'triangle',.07,1.6],ab:[400,.2,'sine',.07,1.6],over:[120,.7,'sawtooth',.09,.5]}[k];
+  if(!P)return;
+  const o=a.createOscillator(),g=a.createGain(),t=a.currentTime;
+  o.type=P[2];o.frequency.setValueAtTime(P[0],t);
+  o.frequency.exponentialRampToValueAtTime(Math.max(40,P[0]*P[4]),t+P[1]);
+  g.gain.setValueAtTime(P[3],t);g.gain.exponentialRampToValueAtTime(.0001,t+P[1]);
+  o.connect(g);g.connect(a.destination);o.start();o.stop(t+P[1]);
+}
+function vib(ms){if(sndOn&&typeof navigator!=='undefined'&&navigator.vibrate){try{navigator.vibrate(ms)}catch(e){}}}
+addEventListener('pointerdown',ac);addEventListener('keydown',ac);
+
+// ---- Bestwerte (im Browser gespeichert) ----
+function saveRec(){try{localStorage.setItem('tdRec',JSON.stringify(rec))}catch(e){}}
+function recEnd(mine){
+  const k=diff;
+  if(mode==='duel'&&bot){if(mine)rec['d'+k]=Math.max(rec['d'+k]||0,score[0])}
+  else if(mode==='battle'){const r=rec['b'+k]||{w:0,k:0};if(mine)r.w++;r.k=Math.max(r.k,myKills);rec['b'+k]=r}
+  else if(mode==='endless'){const r=rec['e'+k]||{w:0,k:0};r.w=Math.max(r.w,wave);r.k=Math.max(r.k,kills);rec['e'+k]=r}
+  else if(mode==='base'){const r=rec['x'+k]||{w:0,k:0};r.w=Math.max(r.w,wave);r.k=Math.max(r.k,kills);rec['x'+k]=r}
+  saveRec();
+}
+function showRecs(){
+  const k=diff,d=rec['d'+k]||0,b=rec['b'+k]||{w:0,k:0},e=rec['e'+k]||{w:0,k:0},x=rec['x'+k]||{w:0,k:0};
+  document.getElementById('recs').textContent='Rekorde ('+['Leicht','Mittel','Schwer'][k]+'): Duell '+d+' Siege gegen den Bot · Schlacht '+b.w+' Siege, bester Abschusszähler '+b.k+' · Endlos Wave '+e.w+' mit '+e.k+' Kills · Basis Welle '+x.w+' mit '+x.k+' Kills';
+}
+
+function colors(){
+  const s=getComputedStyle(document.documentElement),q=n=>s.getPropertyValue(n).trim();
+  col={bg:q('--card'),wall:q('--mut'),fg:q('--fg'),p:[q('--p1'),q('--p2')],a:q('--p1b')};
+}
+
+function maze(){
+  hw=Array.from({length:R+1},()=>Array(C).fill(true));
+  vw=Array.from({length:R},()=>Array(C+1).fill(true));
+  const seen=Array.from({length:R},()=>Array(C).fill(false));
+  const st=[[rnd(R),rnd(C)]];seen[st[0][0]][st[0][1]]=true;
+  while(st.length){
+    const [r,c]=st[st.length-1];
+    const n=[[r-1,c],[r+1,c],[r,c-1],[r,c+1]].filter(([a,b])=>a>=0&&b>=0&&a<R&&b<C&&!seen[a][b]);
+    if(!n.length){st.pop();continue}
+    const [a,b]=n[rnd(n.length)];
+    if(a<r)hw[r][c]=false;else if(a>r)hw[a][c]=false;else if(b<c)vw[r][c]=false;else vw[r][b]=false;
+    seen[a][b]=true;st.push([a,b]);
+  }
+  for(let i=0;i<Math.round(C*R/5);i++){
+    if(Math.random()<.5)hw[1+rnd(R-1)][rnd(C)]=false;else vw[rnd(R)][1+rnd(C-1)]=false;
+  }
+  rects=[];
+  for(let r=0;r<=R;r++)for(let c=0;c<C;c++)if(hw[r][c])rects.push([c*S-T/2,r*S-T/2,S+T,T]);
+  for(let r=0;r<R;r++)for(let c=0;c<=C;c++)if(vw[r][c])rects.push([c*S-T/2,r*S-T/2,T,S+T]);
+  buildGrid();
+}
+
+function newRound(){
+  if(mode==='base')return newBase();
+  if(mode==='endless')return newEndless();
+  if(mode==='battle')return newBattle();
+  setSize(14,9);
+  maze();colors();
+  const pos=(a,b)=>({x:(a+rnd(b-a)+.5)*S,y:(rnd(R)+.5)*S});
+  tanks=[0,1].map(i=>({...(i?pos(C-4,C):pos(0,4)),a:i?Math.PI:0,alive:true,cd:0,team:i}));
+  bullets=[];resetAt=0;msg='';me=0;used=false;skillBtn.classList.remove('used');
+}
+
+function updateScore(){
+  document.getElementById('s1').textContent=score[0];
+  document.getElementById('s2').textContent=score[1];
+}
+
+// Sonderfähigkeit: zwei Hilfs-Bots an der eigenen Position (einmal pro Runde)
+function skill(){
+  if(!running||mode!=='duel'||used||resetAt||!tanks[me].alive)return;
+  used=true;skillBtn.classList.add('used');
+  const s=tanks[me];
+  [-1,1].forEach((sd,j)=>{
+    const o={x:s.x+Math.cos(s.a+Math.PI/2)*sd*4,y:s.y+Math.sin(s.a+Math.PI/2)*sd*4,a:s.a,alive:true,cd:0,team:0,ally:true,side:j};
+    tanks.push(o);
+  });
+}
+
+const keys={};
+const ctl=[
+  {f:'KeyW',b:'KeyS',l:'KeyA',r:'KeyD',s:'Space'},
+  {f:'ArrowUp',b:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',s:'Enter'}
+];
+addEventListener('keydown',e=>{
+  keys[e.code]=true;
+  if(running&&['Space','Enter','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
+  if(e.code==='KeyR'&&running){score=[0,0];updateScore();newRound()}
+  if(running&&mode==='endless'&&/^Digit[1-7]$/.test(e.code)&&!e.repeat)useAbility(['salvo','helpers','arty','elite','joker','turret','army'][+e.code.slice(5)-1]);
+  if(e.code==='KeyE'&&!e.repeat){if(mode==='battle'||mode==='endless')toggleGather();else skill()}
+});
+addEventListener('keyup',e=>{keys[e.code]=false});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;document.querySelectorAll('#touch button').forEach(b=>b.classList.remove('on'))});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',colors);
+
+function push(o,r){
+  for(const [x,y,w,h] of rects){
+    const cx=Math.max(x,Math.min(o.x,x+w)),cy=Math.max(y,Math.min(o.y,y+h));
+    const dx=o.x-cx,dy=o.y-cy,d=Math.hypot(dx,dy);
+    if(d>0&&d<r){o.x+=dx/d*(r-d);o.y+=dy/d*(r-d)}
+  }
+}
+const inWall=b=>mode==='base'?baseWall(b.x,b.y,b.team===0&&!b.gh?2:b.team):wallAt(b.x,b.y);
+
+const clear=(a,b)=>{
+  const n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/6);
+  for(let i=1;i<n;i++)if(inWall({x:a.x+(b.x-a.x)*i/n,y:a.y+(b.y-a.y)*i/n,team:a.team,gh:!!a.mount}))return false;
+  return true;
+};
+
+function nextCell(t,p){
+  const cell=o=>[Math.min(R-1,Math.max(0,Math.floor(o.y/S))),Math.min(C-1,Math.max(0,Math.floor(o.x/S)))];
+  const [sr,sc]=cell(t),[gr,gc]=cell(p);
+  if(sr===gr&&sc===gc)return null;
+  const start=sr*C+sc,prev=new Map([[start,-1]]),q=[[sr,sc]];
+  while(q.length){
+    const [r,c]=q.shift();
+    if(r===gr&&c===gc)break;
+    const n=[];
+    if(!hw[r][c])n.push([r-1,c]);
+    if(!hw[r+1][c])n.push([r+1,c]);
+    if(!vw[r][c])n.push([r,c-1]);
+    if(!vw[r][c+1])n.push([r,c+1]);
+    for(const [a,b] of n)if(!prev.has(a*C+b)){prev.set(a*C+b,r*C+c);q.push([a,b])}
+  }
+  let cur=gr*C+gc;
+  if(!prev.has(cur))return null;
+  while(prev.get(cur)!==start)cur=prev.get(cur);
+  return{x:(cur%C+.5)*S,y:(Math.floor(cur/C)+.5)*S};
+}
+
+const norm=a=>Math.atan2(Math.sin(a),Math.cos(a));
+
+let cellRects=[];
+function buildGrid(){
+  cellRects=Array.from({length:R*C},()=>[]);
+  for(const q of rects){
+    const c0=Math.max(0,Math.floor((q[0]-6)/S)),c1=Math.min(C-1,Math.floor((q[0]+q[2]+6)/S));
+    const r0=Math.max(0,Math.floor((q[1]-6)/S)),r1=Math.min(R-1,Math.floor((q[1]+q[3]+6)/S));
+    for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)cellRects[r*C+c].push(q);
+  }
+}
+function wallAt(x,y){
+  const c=Math.floor(x/S),r=Math.floor(y/S);
+  if(c<0||r<0||c>=C||r>=R)return true;
+  const L=cellRects[r*C+c];
+  for(let i=0;i<L.length;i++){
+    const q=L[i];
+    if(x>q[0]-3&&x<q[0]+q[2]+3&&y>q[1]-3&&y<q[1]+q[3]+3)return true;
+  }
+  return false;
+}
+
+// ---- Modus Schlacht ----
+const shuf=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+const cam={x:0,y:0,z:1,ox:0,oy:0};
+
+function updateCam(){
+  const bp=mode==='base'&&phase==='place',pl=mode==='battle'&&phase==='place',w=bp?1120:pl?AW/2:840,h=bp?1120:pl?AH:540;
+  if(VW!==w||VH!==h){VW=w;VH=h;cv.width=w;cv.height=h}
+  if(bp){cam.z=1;cam.x=BC.x-560;cam.y=BC.y-560;cam.ox=0;cam.oy=0;return}
+  if(mode==='battle'&&phase==='place'){
+    const z=1;
+    cam.z=z;cam.x=0;cam.y=0;cam.ox=0;cam.oy=0;return;
+  }
+  const f=tanks[me]||tanks[0];
+  cam.z=1;cam.ox=0;cam.oy=0;
+  cam.x=f?Math.max(0,Math.min(AW-VW,f.x-VW/2)):0;
+  cam.y=f?Math.max(0,Math.min(AH-VH,f.y-VH/2)):0;
+}
+
+function drawOverlay(){
+  if(mode!=='battle'||phase!=='place')return;
+  g.globalAlpha=.1;g.fillStyle=col.p[0];g.fillRect(0,0,AW/2,AH);
+  g.globalAlpha=.25;g.fillStyle=col.fg;g.fillRect(AW/2-1,0,2,AH);g.globalAlpha=1;
+}
+function drawMarks(){
+  if(mode!=='battle')return;
+  g.font='700 14px system-ui,sans-serif';g.textAlign='center';
+  for(const t of tanks)if(t.alive&&t.team===0&&t.ally){
+    g.fillStyle=t.order==='attack'?col.p[1]:col.fg;
+    g.fillText((t.type==='sniper'?'S':t.type==='heavy'?'H':t.type==='melee'?'N':'')+(t.order==='hold'?'■':t.order==='attack'?'▶':'?'),t.x,t.y-18);
+  }
+}
+// Minikarte: du (hell), dein Team und nur die Gegner im Kameraausschnitt; der Rahmen zeigt den Ausschnitt
+// Anzeigen liegen über der Karte (HTML), nicht im Spielfeld
+function updateHud(){
+  const on=running&&((mode==='battle'&&phase==='fight')||mode==='endless'||mode==='base');
+  hud.hidden=!on;
+  if(!on)return;
+  if(mode==='base'){hudBase();return}
+  let s;
+  if(mode==='battle'){
+    let a=0,b=0;
+    for(const t of tanks)if(t.alive){if(t.team)b++;else a++}
+    s='Dein Team: '+a+' · Gegner: '+b+' · Meine Abschüsse: '+myKills;
+  }else{
+    let b=queue;
+    for(const t of tanks)if(t.alive&&t.team===1)b++;
+    s='Wave '+wave+' · Gegner: '+b+' · Kills: '+kills+' · Punkte: '+pts+' · Rekord: Wave '+Math.max((rec['e'+diff]||{w:0}).w,wave)+' · Joker: '+(joker?'BEREIT':'–');
+    abilEl.querySelectorAll('button').forEach(bt=>{
+      const a=AB[bt.dataset.a],ok=wave>=a.wave&&pts>=a.cost[diff]&&!(bt.dataset.a==='joker'&&joker),lb=(Object.keys(AB).indexOf(bt.dataset.a)+1)+' '+a.n+'\n'+(bt.dataset.a==='joker'&&joker?'bereit':a.cost[diff])+(a.wave>1&&!(bt.dataset.a==='joker'&&joker)?' · W'+a.wave:'');
+      if(bt.textContent!==lb)bt.textContent=lb;
+      if(bt.disabled===ok)bt.disabled=!ok;
+    });
+  }
+  if(s!==lastHud){hudtxt.textContent=s;lastHud=s}
+  drawMini2();
+}
+function drawMini2(){
+  const w=240,h=Math.round(w*AH/AW),k=w/AW;
+  if(mini.width!==w||mini.height!==h){mini.width=w;mini.height=h}
+  mg.fillStyle=col.bg;mg.fillRect(0,0,w,h);
+  mg.fillStyle=col.wall;
+  for(const r of rects)mg.fillRect(r[0]*k,r[1]*k,Math.max(1,r[2]*k),Math.max(1,r[3]*k));
+  tanks.forEach((t,i)=>{
+    if(!t.alive)return;
+    if(t.team===1&&!((mode==='endless'&&diff===0)||mode==='base')&&(t.x<cam.x||t.x>cam.x+VW||t.y<cam.y||t.y>cam.y+VH))return;
+    const px=t.x*k,py=t.y*k;
+    if(i===me){mg.fillStyle=col.fg;mg.beginPath();mg.arc(px,py,6,0,7);mg.fill()}
+    mg.fillStyle=t.team?col.p[1]:(t.ally?col.a:col.p[0]);
+    mg.beginPath();mg.arc(px,py,i===me?3.5:3,0,7);mg.fill();
+  });
+  mg.strokeStyle=col.fg;mg.lineWidth=1.5;mg.strokeRect(cam.x*k,cam.y*k,VW*k,VH*k);
+}
+function drawShells(){
+  if(mode!=='endless'&&mode!=='base')return;
+  const n=performance.now();
+  if(mode==='base')for(const t of tanks)if(t.alive&&t.tesla&&t.tg)for(const e of t.tg){
+    if(!e.alive)continue;
+    for(let q=0;q<3;q++){
+      g.strokeStyle=q?'#7fc8ff':'#2a8bff';g.lineWidth=q?1.5:3.5;g.globalAlpha=.85;
+      g.beginPath();g.moveTo(t.x,t.y);
+      for(let k=1;k<6;k++){const f=k/6;g.lineTo(t.x+(e.x-t.x)*f+(Math.random()-.5)*14,t.y+(e.y-t.y)*f+(Math.random()-.5)*14)}
+      g.lineTo(e.x,e.y);g.stroke();
+    }
+  }
+  g.globalAlpha=1;
+  for(const s of shells){
+    g.strokeStyle=col.p[1];g.fillStyle=col.p[1];g.lineWidth=3;
+    g.globalAlpha=.4+.4*Math.abs(Math.sin(n/90));
+    g.beginPath();g.arc(s.x,s.y,60,0,7);g.stroke();
+    g.globalAlpha=.15;g.fill();
+  }
+  for(const f of fx){
+    g.globalAlpha=Math.max(0,(f.t-n)/450);g.fillStyle=col.p[1];
+    g.beginPath();g.arc(f.x,f.y,60,0,7);g.fill();
+  }
+  g.globalAlpha=1;
+}
+function drawMiniOld(){
+  if(mode!=='battle'||phase!=='fight')return;
+  const w=240,h=w*AH/AW,x0=VW-w-14,y0=64,k=w/AW;
+  g.globalAlpha=.88;g.fillStyle=col.bg;g.fillRect(x0,y0,w,h);g.globalAlpha=1;
+  g.fillStyle=col.wall;
+  for(const r of rects)g.fillRect(x0+r[0]*k,y0+r[1]*k,Math.max(1,r[2]*k),Math.max(1,r[3]*k));
+  tanks.forEach((t,i)=>{
+    if(!t.alive||t.team!==0)return;
+    const px=x0+t.x*k,py=y0+t.y*k;
+    if(i===me){g.fillStyle=col.fg;g.beginPath();g.arc(px,py,6,0,7);g.fill()}
+    g.fillStyle=t.ally?col.a:col.p[0];g.beginPath();g.arc(px,py,i===me?3.5:3,0,7);g.fill();
+  });
+  tanks.forEach(t=>{
+    if(!t.alive||t.team!==1||t.x<cam.x||t.x>cam.x+VW||t.y<cam.y||t.y>cam.y+VH)return;
+    g.fillStyle=col.p[1];g.beginPath();g.arc(x0+t.x*k,y0+t.y*k,3,0,7);g.fill();
+  });
+  g.strokeStyle=col.fg;g.lineWidth=1.5;g.strokeRect(x0+cam.x*k,y0+cam.y*k,VW*k,VH*k);
+  g.strokeStyle=col.wall;g.strokeRect(x0,y0,w,h);
+}
+function drawHud(){
+  if(mode!=='battle'||phase!=='fight')return;
+  const a=tanks.filter(t=>t.alive&&t.team===0).length,b=tanks.filter(t=>t.alive&&t.team===1).length;
+  g.font='800 40px system-ui,sans-serif';g.lineWidth=6;g.lineJoin='round';g.strokeStyle=col.bg;
+  g.textAlign='left';g.fillStyle=col.p[0];g.strokeText('Dein Team: '+a,16,50);g.fillText('Dein Team: '+a,16,50);
+  g.textAlign='right';g.fillStyle=col.p[1];g.strokeText('Gegner: '+b,VW-16,50);g.fillText('Gegner: '+b,VW-16,50);
+}
+
+function newBattle(){
+  setSize(22,13,90);maze();colors();
+  tanks=lastPlace.map((u,i)=>({x:(u.c+.5)*S,y:(u.r+.5)*S,a:0,alive:true,cd:0,team:0,...(i?{ally:true,order:u.order}:{})}));
+  tanks.forEach((t,i)=>{if(i&&lastPlace[i]&&lastPlace[i].type)setType(t,lastPlace[i].type)});
+  bullets=[];resetAt=0;msg='';me=0;phase='place';myKills=0;
+  updatePanel();
+}
+
+function placeAt(x,y){
+  const c=Math.floor(x/S),r=Math.floor(y/S);
+  if(c<0||r<0||c>=C/2||r>=R)return;
+  const ex=tanks.findIndex(t=>Math.floor(t.x/S)===c&&Math.floor(t.y/S)===r);
+  if(ex>0){tanks[ex].order=pickOrder;return}
+  if(ex===0||tanks.length>=17)return;
+  const o={x:(c+.5)*S,y:(r+.5)*S,a:0,alive:true,cd:0,team:0};
+  if(tanks.length){if(typeLeft(pickType)<=0){hint.textContent='Von diesem Typ ist keiner mehr übrig, wähle einen anderen.';return}o.ally=true;o.order=null;setType(o,pickType)}
+  tanks.push(o);
+  updatePanel();
+}
+
+// Schwer: Der Gegner kennt deine Aufstellung. Er sammelt sich dort, wo deine haltenden Bots am schlechtesten hinkommen, und wählt seine Taktik nach deinen Befehlen.
+function smartSetup(){
+  const mine=tanks.filter((t,i)=>i&&t.order),hold=mine.filter(t=>t.order==='hold'),A=mine.length-hold.length;
+  smartMode=A>=6?'turtle':'mass';
+  const pl=tanks[0];
+  const hx=hold.reduce((a,h)=>a+h.x,0)/(hold.length||1),hy=hold.reduce((a,h)=>a+h.y,0)/(hold.length||1);
+  clumpMode=hold.filter(h=>Math.hypot(h.x-pl.x,h.y-pl.y)<450).length>=7||hold.filter(h=>Math.hypot(h.x-hx,h.y-hy)<380).length>=8;
+  if(clumpMode)smartMode='mass';
+  const all=[];
+  for(let c=C/2;c<C;c++)for(let r=0;r<R;r++)all.push([c,r]);
+  const sc=p=>{const x=(p[0]+.5)*S,y=(p[1]+.5)*S;let m=1e9;for(const h of hold)m=Math.min(m,Math.hypot(h.x-x,h.y-y));return m};
+  const ctr=hold.length?all.reduce((b,p)=>sc(p)>sc(b)?p:b,all[0]):all[rnd(all.length)];
+  // drei Gruppen an verschiedenen Seiten (oben, Mitte, unten), jede dort, wo deine Haltenden am schlechtesten hinkommen
+  const used=new Set(),out=[];
+  [1,R>>1,R-2].forEach((row,g)=>{
+    const band=all.filter(p=>Math.abs(p[1]-row)<=1);
+    const anc=hold.length?band.reduce((b,p)=>sc(p)>sc(b)?p:b,band[0]):band[rnd(band.length)];
+    all.slice().sort((a,b)=>Math.hypot(a[0]-anc[0],a[1]-anc[1])-Math.hypot(b[0]-anc[0],b[1]-anc[1])).filter(p=>!used.has(p[0]*99+p[1])).slice(0,g<2?6:5).forEach(([c,r])=>{used.add(c*99+r);out.push({c,r,order:'hold',g})});
+  });
+  return out;
+}
+
+function enemySetup(s){
+  const all=[];
+  for(let c=C/2;c<C;c++)for(let r=0;r<R;r++)all.push([c,r]);
+  const used=new Set(),out=[];
+  const add=(list,n,order)=>{
+    for(const [c,r] of shuf(list)){
+      if(n<=0)break;
+      if(used.has(c*99+r))continue;
+      used.add(c*99+r);n--;
+      out.push({c,r,order:typeof order==='function'?order():order});
+    }
+  };
+  const rd=()=>Math.random()<.5?'attack':'hold';
+  if(s==='Angriff')add(all.filter(p=>p[0]<C/2+4),17,'attack');
+  else if(s==='Verteidigung'){add(all.filter(p=>p[0]>=C-5),3,'attack');add(all.filter(p=>p[0]>=C-5),14,'hold')}
+  else if(s==='Zangenangriff'){add(all.filter(p=>p[1]<2||p[1]>=R-2),8,'attack');add(all.filter(p=>p[0]>=C-6),9,'hold')}
+  else add(all,17,rd);
+  add(all,17-out.length,rd);
+  return out;
+}
+
+function startFight(){
+  smartMode=null;clumpMode=false;
+  if(tanks.length<17||tanks.some((t,i)=>i&&!t.order))return;
+  lastPlace=tanks.map((t,i)=>({c:Math.floor(t.x/S),r:Math.floor(t.y/S),order:t.order,type:t.type}));
+  const strat=['Angriff','Verteidigung','Zangenangriff','Gemischt'][rnd(4)];
+  (diff===2?smartSetup():enemySetup(strat)).forEach(u=>tanks.push({x:(u.c+.5)*S,y:(u.r+.5)*S,a:Math.PI,alive:true,cd:0,team:1,order:u.order,grp:u.g,home:{x:(u.c+.5)*S,y:(u.r+.5)*S}}));
+  const n=performance.now();
+  tanks.forEach(t=>{t.pn=n+rnd(600);if(t.team===1&&clumpMode){t.dr=46;t.dh=100}});
+  {const en=shuf(tanks.filter(t=>t.team===1)),pl=[[0,0,0],[1,1,1],[3,3,2]][diff];let q=0;
+   ['sniper','melee','heavy'].forEach((ty,k)=>{for(let j=0;j<pl[k];j++)if(en[q])setType(en[q++],ty)})}
+  if(diff===2)shuf(tanks.filter(t=>t.team===1)).slice(0,Math.round(tanks.filter(t=>t.team===1).length*(clumpMode?.5:.25))).forEach(t=>{t.salvo=true});
+  fightT0=n;phase='fight';me=0;etNext=n+9000;etac='';etPrev='';etHoldN=0;rel[0]={on:false,next:0};rel[1]={on:false,next:0};gather=false;gq=[];skillBtn.textContent='Sammeln';skillBtn.classList.remove('on');
+  updatePanel();
+  document.getElementById('binfo').textContent='Gegner-Strategie: '+(smartMode==='mass'?(clumpMode?'erkennt deinen Verteidigungsring, dodgt besser, feuert mehr Salven und greift früh geschlossen an':'kennt deine Aufstellung, sammelt sich außerhalb deiner Reichweite und greift dann geschlossen an'):smartMode==='turtle'?'kennt deine Aufstellung, verschanzt sich und wartet auf deine Angreifer':strat);
+}
+
+// Plant einen Schuss mit höchstens einem Abprall (begrenzt pro Bild, damit viele Bots flüssig laufen)
+function planAim(t,p){
+  const now=performance.now();
+  if(now<t.pn||planCnt>=2)return;
+  planCnt++;t.pn=now+(t.bpn??(t.team===1?dd().bpn:450))+rnd(150);t.aim=null;
+  if(Math.hypot(p.x-t.x,p.y-t.y)>(t.rng||(t.team===1&&clumpMode?820:650)))return;
+  let bd=9;
+  for(let i=0;i<72;i++){
+    const ang=i/72*2*Math.PI;
+    if(shotHits(t,p,ang)){const d=Math.abs(norm(ang-t.a));if(d<bd){bd=d;t.aim=ang+(Math.random()-.5)*(t.bj??(t.team===1?dd().bj*(clumpMode?.6:1)*(t.terr||1):.16*(t.terr||1)))}}
+  }
+}
+
+// Sind alle ursprünglichen Angreifer eines Teams besiegt, wechseln die Haltenden nacheinander in den Angriff
+const rel=[{on:false,next:0},{on:false,next:0}];
+function releaseHolds(now){
+  for(const tm of [0,1]){
+    const q=rel[tm],mem=tanks.filter(t=>t.alive&&t.team===tm&&t.order);
+    if(tm===1&&etac==='hold')continue;
+    if(!q.on){
+      if(mem.some(t=>t.order==='attack'&&!t.conv))continue;
+      if(tm===1&&smartMode==='turtle'&&tanks.some(t=>t.alive&&t.team===0&&t.order==='attack'&&!t.conv))continue;
+      q.on=true;q.next=now+(tm===1&&smartMode==='mass'?(clumpMode?8000:15000):1500);
+    }
+    if(now>=q.next){
+      const h=mem.find(t=>t.order==='hold');
+      if(tm===1&&smartMode){for(let g=0;g<3;g++){const x=mem.find(m=>m.order==='hold'&&m.grp===g);if(x){x.order='attack';x.conv=true;x.flank=true;x.ft=now+7000}}q.next=now+1300}else if(h){h.order='attack';h.conv=true;q.next=now+2500}
+    }
+  }
+}
+
+// Prüft, ob ein Schuss in Blickrichtung (mit höchstens einem Abprall) den Schützen selbst treffen würde
+// Joker: verhindert den Tod des Spielers (Endlosschlacht) und gibt 3 Sekunden Unverwundbarkeit
+function absorb(t,ti,b){
+  if((mode!=='endless'&&mode!=='base')||ti!==me)return false;
+  const n=performance.now();
+  if(n<invT)return true;
+  if(joker){joker=false;invT=n+3000;b.die=0;sfx('ab');vib(120);return true}
+  return false;
+}
+function safeShot(t){
+  let vx=Math.cos(t.a)*4.2,vy=Math.sin(t.a)*4.2,n=0;
+  const b=muzzle(t,t.a);
+  for(let s=0;s<130;s++){
+    let w=false;
+    b.x+=vx;if(wallAt(b.x,b.y)){b.x-=vx;vx=-vx;w=true}
+    b.y+=vy;if(wallAt(b.x,b.y)){b.y-=vy;vy=-vy;w=true}
+    if(w&&++n>1)return true;
+    if(n>0&&Math.hypot(t.x-b.x,t.y-b.y)<15)return false;
+  }
+  return true;
+}
+
+// Sammeln: alle Bots reihen sich hinter dir ein, jeder folgt seinem Vorgänger (dem nächsten in der Reihe) und damit demselben Weg
+function toggleGather(){
+  if(!running||(mode!=='battle'&&mode!=='endless')||phase!=='fight'||resetAt)return;
+  const L=tanks[me];
+  if(!L||!L.alive)return;
+  gather=!gather;
+  if(gather){
+    gq=tanks.filter((t,i)=>t.alive&&t.team===0&&t.ally&&!t.turret&&(mode==='endless'||t.order==='attack')&&i!==me).sort((a,b)=>Math.hypot(a.x-L.x,a.y-L.y)-Math.hypot(b.x-L.x,b.y-L.y));
+    gq.forEach(t=>{t.dest=null});
+  }
+  skillBtn.textContent=gather?'Ausschwärmen':'Sammeln';
+  skillBtn.classList.toggle('on',gather);
+}
+
+function prevOf(t){
+  const L=tanks[me];
+  const list=gq.filter(q=>q.alive&&q!==L),i=list.indexOf(t);
+  return i<2?L:list[i-2];
+}
+
+function followAI(t){
+  const prev=prevOf(t);
+  if(!prev)return{};
+  const dist=Math.hypot(prev.x-t.x,prev.y-t.y);
+  t.sp=dist>150?1.9:1.5;
+  if(dist<=34){
+    const f=nearest(t);
+    if(f&&Math.hypot(f.x-t.x,f.y-t.y)<420&&clear(t,f)){
+      const e=norm(Math.atan2(f.y-t.y,f.x-t.x)-t.a);
+      return{l:e<-.06,r:e>.06,s:Math.abs(e)<.1};
+    }
+    const e=norm(prev.a-t.a);
+    return{l:e<-.06,r:e>.06};
+  }
+  const tg=(dist<160&&clear(t,prev))?prev:(path(t,prev)||prev);
+  const d=norm(Math.atan2(tg.y-t.y,tg.x-t.x)-t.a);
+  return{l:d<-.06,r:d>.06,f:Math.abs(d)<.9};
+}
+
+// Anzahl gegnerischer Panzer in der Nähe (für den Duell-Gegner: je mehr, desto schneller schießt er)
+function near(t){return tanks.filter(o=>o.alive&&o.team!==t.team&&Math.hypot(o.x-t.x,o.y-t.y)<320).length}
+
+// Salve des Duell-Gegners: alle 30 Sekunden 3 bis 4 Kugeln im Fächer. Wann und wohin entscheidet er selbst.
+function safeAng(t,ang){
+  let vx=Math.cos(ang)*4.2,vy=Math.sin(ang)*4.2,n=0;
+  const b=muzzle(t,ang);
+  for(let s=0;s<130;s++){
+    let w=false;
+    b.x+=vx;if(wallAt(b.x,b.y)){b.x-=vx;vx=-vx;w=true}
+    b.y+=vy;if(wallAt(b.x,b.y)){b.y-=vy;vy=-vy;w=true}
+    if(w&&++n>1)return true;
+    if(n>0&&Math.hypot(t.x-b.x,t.y-b.y)<15)return false;
+  }
+  return true;
+}
+function trySalvo(t,i,now){
+  if(t.sv===undefined)t.sv=now+(diff===2?5000:8000);
+  if(now<t.sv||!t.alive)return;
+  const p=nearest(t);
+  if(!p)return;
+  let ang=null;
+  if(Math.hypot(p.x-t.x,p.y-t.y)<650&&clear(t,p))ang=Math.atan2(p.y-t.y,p.x-t.x);
+  else if(t.aim!=null)ang=t.aim;
+  if(ang===null||Math.random()>.15)return;
+  const n=(diff===2?4:3)+rnd(2),as=[];
+  for(let j=0;j<n;j++){const a=ang+(j-(n-1)/2)*.22;if(safeAng(t,a))as.push(a)}
+  if(!as.length)return;
+  as.forEach(a=>bullets.push({x:muzzle(t,a).x,y:muzzle(t,a).y,vx:Math.cos(a)*4.2,vy:Math.sin(a)*4.2,o:i,team:t.team,mb:t.mb,n:0,die:now+7000}));
+  t.sv=now+(diff===2?9000:15000);if(diff===1)t.flash=performance.now()+500;
+}
+
+// Schwierigkeit (0 leicht, 1 mittel, 2 schwer). sp/j/cd/cdn/pn/pnn/miss: Duell-Gegner; bsp/bj/bpn/bcd: Gegner-Bots in der Schlacht
+const D=[
+  {sp:1.15,j:.22,cd:1100,cdn:800,pn:450,pnn:300,miss:.5,bsp:.9,bj:.26,bpn:700,bcd:1100},
+  {sp:1.5,j:.09,cd:660,cdn:360,pn:245,pnn:140,miss:.03,bsp:1.05,bj:.16,bpn:450,bcd:800},
+  {sp:1.7,j:.03,cd:470,cdn:250,pn:160,pnn:90,miss:0,bsp:1.07,bj:.1,bpn:340,bcd:650}
+];
+let diff=1;
+const dd=()=>D[diff];
+
+// Schlacht, Schwer: ein Viertel der Gegner-Bots feuert alle 20 Sekunden eine Salve, eine Sekunde vorher leuchtet ein Ring auf
+function salvoB(t,i,now){
+  if(!t.salvo||!t.alive)return;
+  if(t.sv===undefined)t.sv=now+(clumpMode?7000:12000);
+  if(t.ann){
+    t.flash=performance.now()+120;
+    if(now<t.ann)return;
+    t.ann=0;
+    const p=nearest(t);
+    if(p){
+      const ang=Math.atan2(p.y-t.y,p.x-t.x),n=4+rnd(2);
+      for(let j=0;j<n;j++){
+        const a=ang+(j-(n-1)/2)*.22;
+        if(safeAng(t,a))bullets.push({x:muzzle(t,a).x,y:muzzle(t,a).y,vx:Math.cos(a)*4.2,vy:Math.sin(a)*4.2,o:i,team:t.team,ord:t.order,n:0,die:now+7000});
+      }
+    }
+    t.sv=now+(clumpMode?12000:20000);
+    return;
+  }
+  if(now<t.sv)return;
+  const p=nearest(t);
+  if(p&&Math.hypot(p.x-t.x,p.y-t.y)<600&&clear(t,p))t.ann=now+1000;
+}
+
+// ---- Endlosschlacht: Fenster aus Zellen, das sich mit dem Spieler verschiebt. Alte Teile fallen weg, neue werden erzeugt. ----
+const AB={salvo:{cost:[2,2,3],wave:1,n:'Salve'},helpers:{cost:[4,5,6],wave:2,n:'Hilfsbots'},arty:{cost:[6,8,10],wave:3,n:'Artillerie'},elite:{cost:[9,12,15],wave:4,n:'Elite-Bots'},joker:{cost:[8,10,14],wave:3,n:'Joker'},turret:{cost:[5,6,8],wave:2,n:'Geschütz'},army:{cost:[14,16,22],wave:5,n:'Armee'}};
+
+function rebuildRects(){
+  rects=[];
+  for(let r=0;r<=R;r++)for(let c=0;c<C;c++)if(hw[r][c])rects.push([c*S-T/2,r*S-T/2,S+T,T]);
+  for(let r=0;r<R;r++)for(let c=0;c<=C;c++)if(vw[r][c])rects.push([c*S-T/2,r*S-T/2,T,S+T]);
+  buildGrid();
+}
+
+function cellOf(o){return[Math.min(R-1,Math.max(0,Math.floor(o.y/S))),Math.min(C-1,Math.max(0,Math.floor(o.x/S)))]}
+
+function flood(r0,c0){
+  const seen=new Uint8Array(R*C),st=[r0*C+c0];
+  seen[r0*C+c0]=1;
+  while(st.length){
+    const v=st.pop(),r=Math.floor(v/C),c=v%C;
+    if(r>0&&!hw[r][c]&&!seen[v-C]){seen[v-C]=1;st.push(v-C)}
+    if(r<R-1&&!hw[r+1][c]&&!seen[v+C]){seen[v+C]=1;st.push(v+C)}
+    if(c>0&&!vw[r][c]&&!seen[v-1]){seen[v-1]=1;st.push(v-1)}
+    if(c<C-1&&!vw[r][c+1]&&!seen[v+1]){seen[v+1]=1;st.push(v+1)}
+  }
+  return seen;
+}
+
+function extend(dir,k){
+  const oH=hw,oV=vw,oR=R,oC=C;
+  const gr=mode==='base';
+  if(gr){if(dir==='L'||dir==='R')C=oC+k;else R=oR+k;AW=C*S;AH=R*S}
+  const dc=dir==='L'?k:dir==='R'?(gr?0:-k):0,dr=dir==='U'?k:dir==='D'?(gr?0:-k):0;
+  const inW=(r,c)=>r>=0&&r<R&&c>=0&&c<C;
+  const isNew=(r,c)=>{const a=r-dr,b=c-dc;return !(a>=0&&a<oR&&b>=0&&b<oC)};
+  const H=Array.from({length:R+1},()=>Array(C).fill(true)),V=Array.from({length:R},()=>Array(C+1).fill(true));
+  const bnd=[];
+  for(let r=0;r<=R;r++)for(let c=0;c<C;c++){
+    const a=inW(r-1,c)?isNew(r-1,c):null,b=inW(r,c)?isNew(r,c):null;
+    if(a!==true&&b!==true){const or=r-dr,oc=c-dc;H[r][c]=(or>=0&&or<=oR&&oc>=0&&oc<oC)?oH[or][oc]:true}
+    else if(a===false||b===false)bnd.push([H,r,c]);
+  }
+  for(let r=0;r<R;r++)for(let c=0;c<=C;c++){
+    const a=inW(r,c-1)?isNew(r,c-1):null,b=inW(r,c)?isNew(r,c):null;
+    if(a!==true&&b!==true){const or=r-dr,oc=c-dc;V[r][c]=(or>=0&&or<oR&&oc>=0&&oc<=oC)?oV[or][oc]:true}
+    else if(a===false||b===false)bnd.push([V,r,c]);
+  }
+  const cells=[];
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++)if(isNew(r,c))cells.push([r,c]);
+  const seen=Array.from({length:R},(_,r)=>Array.from({length:C},(_,c)=>!isNew(r,c)));
+  const rm=(r,c,r2,c2)=>{if(r2<r)H[r][c]=false;else if(r2>r)H[r2][c]=false;else if(c2<c)V[r][c]=false;else V[r][c2]=false};
+  const s0=cells[rnd(cells.length)],st=[s0];
+  seen[s0[0]][s0[1]]=true;
+  while(st.length){
+    const [r,c]=st[st.length-1];
+    const n=[[r-1,c],[r+1,c],[r,c-1],[r,c+1]].filter(([a,b])=>inW(a,b)&&!seen[a][b]);
+    if(!n.length){st.pop();continue}
+    const [a,b]=n[rnd(n.length)];
+    rm(r,c,a,b);seen[a][b]=true;st.push([a,b]);
+  }
+  for(let i=0;i<cells.length/5;i++){
+    const [r,c]=cells[rnd(cells.length)],[a,b]=[[r-1,c],[r+1,c],[r,c-1],[r,c+1]][rnd(4)];
+    if(inW(a,b)&&isNew(a,b))rm(r,c,a,b);
+  }
+  shuf(bnd).forEach(([A,r,c],i)=>{if(i<3||Math.random()<.35)A[r][c]=false});
+  for(let c=0;c<C;c++){H[0][c]=true;H[R][c]=true}
+  for(let r=0;r<R;r++){V[r][0]=true;V[r][C]=true}
+  braid(H,V,braidP());hw=H;vw=V;rebuildRects();
+  const sx=dc*S,sy=dr*S,mv=o=>{o.x+=sx;o.y+=sy};
+  tanks.forEach(mv);bullets.forEach(mv);shells.forEach(mv);fx.forEach(mv);
+  if(mode==='base'){walls.forEach(w=>{w.c+=dc;w.row+=dr;w.r[0]+=sx;w.r[1]+=sy});if(towerRect){towerRect[0]+=sx;towerRect[1]+=sy}BC.x+=sx;BC.y+=sy;rebuildBase()}
+  const [pr,pc]=cellOf(tanks[me]),reach=flood(pr,pc),edge=[];
+  for(let r=1;r<R-1;r++)for(let c=1;c<C-1;c++)if((r===1||r===R-2||c===1||c===C-2)&&reach[r*C+c])edge.push([r,c]);
+  tanks.forEach(t=>{
+    if(!t.alive)return;
+    const r=Math.floor(t.y/S),c=Math.floor(t.x/S);
+    if(r<0||r>=R||c<0||c>=C||!reach[r*C+c]){
+      if(!edge.length){t.alive=false;t.gone=true;return}
+      const px=Math.max(0,Math.min(AW,t.x)),py=Math.max(0,Math.min(AH,t.y));
+      let bd=1e9,bp=edge[0];
+      for(const q of edge){const d=Math.hypot((q[1]+.5)*S-px,(q[0]+.5)*S-py);if(d<bd){bd=d;bp=q}}
+      t.x=(bp[1]+.5)*S;t.y=(bp[0]+.5)*S;
+    }
+  });
+  bullets=bullets.filter(b=>b.x>0&&b.x<AW&&b.y>0&&b.y<AH);
+}
+
+function checkExtend(){
+  const L=tanks[me];
+  if(!L||!L.alive)return;
+  const c=Math.floor(L.x/S),r=Math.floor(L.y/S);
+  if(c<6)extend('L',8);else if(c>C-7)extend('R',8);else if(r<5)extend('U',6);else if(r>R-6)extend('D',6);
+}
+
+// Gegnertypen: Sniper (weit und genau, bleibt auf Abstand), Nahkämpfer (schnell, weicht aus, schießt schnell), Schwerer Panzer (zwei Treffer)
+function setType(t,ty){
+  t.type=ty;
+  if(ty==='sniper'){t.rng=1150;t.keep=560;t.tspd=.8;t.tcd=1.7;t.terr=.25}
+  else if(ty==='melee'){t.melee=true;t.tspd=1.35;t.tcd=.55;t.terr=1.6;t.dm=.12;t.dr=42;t.dh=95;t.keep=60}
+  else if(ty==='heavy'){t.hp=2;t.tspd=.8}
+}
+
+// ================= Basis verteidigen =================
+const RING=5;
+let BC={x:0,y:0},ringR=350;
+const CM=()=>[.6,.8,1][diff];
+function rebuildBase(){
+  rebuildRects();
+  for(const w of walls)if(w.hp>0)rects.push(w.r);
+  if(towerRect)rects.push(towerRect);
+  buildGrid();
+}
+function isSlot(c,r){
+  const d=Math.hypot((c+.5)*S-BC.x,(r+.5)*S-BC.y);
+  return d<=3.9*S&&d>=70&&!walls.find(q=>q.c===c&&q.row===r);
+}
+const CAPS={turret:[12,10,8],tesla:[8,6,5],arty:[3,2,2],soldat:[24,20,16]};
+function unitCount(k){return tanks.filter(t=>t.alive&&t.team===0&&t.ally&&(k==='soldat'?t.soldier:k==='arty'?t.arty:k==='tesla'?t.tesla:(t.turret&&!t.arty&&!t.tesla&&!t.tower))).length}
+function baseWall(x,y,team){
+  const c=Math.floor(x/S),r=Math.floor(y/S);
+  if(c<0||r<0||c>=C||r>=R)return true;
+  const L=cellRects[r*C+c];
+  for(let i=0;i<L.length;i++){
+    const q=L[i];
+    if(x>q[0]-3&&x<q[0]+q[2]+3&&y>q[1]-3&&y<q[1]+q[3]+3){if(team===0&&q.o)continue;return q}
+  }
+  return false;
+}
+// Feindliche Kugeln verschwinden an Wänden und beschädigen Mauerstücke
+function bwHit(b){
+  if(mode!=='base')return;
+  if(b.team===0){if(b.n>=1)b.die=0;return}
+  if(b.team!==1)return;
+  const q=baseWall(b.x,b.y,1);
+  b.die=0;
+  if(q&&q.W&&q.W.hp>0){
+    q.W.hp-=(b.dmg||[8,10,12][diff]);
+    if(q.W.hp<=0){q.W.hp=0;fx.push({x:q.W.r[0]+S/2,y:q.W.r[1]+S/2,t:performance.now()+450});sfx('kill');rebuildBase()}
+  }
+}
+function baseLabels(){
+  const L={turret:['Geschütz',15],soldat:['Soldat',10],arty:['Artillerie',30],wall:['Mauer',8],tesla:['Tesla',25]};
+  bbuild.querySelectorAll('[data-t]').forEach(b=>{
+    const k=b.dataset.t,l=L[k];
+    if(!l)return;
+    const t=l[0]+' ('+Math.max(1,Math.round(l[1]*CM()))+')'+(CAPS[k]?' '+unitCount(k)+'/'+CAPS[k][diff]:'');
+    if(b.textContent!==t)b.textContent=t;
+  });
+}
+function newBase(){
+  setSize(36,28,70);
+  maze();
+  const cx=AW/2,cy=AH/2;
+  const inner=(r,c)=>Math.hypot((c+.5)*S-cx,(r+.5)*S-cy)/S<RING+4.5;
+  for(let r=1;r<R;r++)for(let c=0;c<C;c++)if(inner(r-1,c)&&inner(r,c))hw[r][c]=false;
+  for(let r=0;r<R;r++)for(let c=1;c<C;c++)if(inner(r,c-1)&&inner(r,c))vw[r][c]=false;
+  for(let r=1;r<R;r++)for(let c=0;c<C;c++)if(inner(r-1,c)!==inner(r,c)&&Math.random()<.25)hw[r][c]=false;
+  for(let r=0;r<R;r++)for(let c=1;c<C;c++)if(inner(r,c-1)!==inner(r,c)&&Math.random()<.25)vw[r][c]=false;
+  braid(hw,vw,.7);
+  colors();
+  walls=[];
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+    const d=Math.hypot((c+.5)*S-cx,(r+.5)*S-cy)/S;
+    if(Math.abs(d-RING)<.55){const w={c,row:r,lvl:1,hp:60,mx:60};w.r=[c*S,r*S,S,S];w.r.W=w;w.r.o=true;walls.push(w)}
+  }
+  towerRect=[cx-28,cy-28,56,56];towerRect.o=true;BC={x:cx,y:cy};
+  rebuildBase();
+  tanks=[{x:cx+70,y:cy,a:0,alive:true,cd:0,team:0},{x:cx,y:cy,a:0,alive:true,cd:0,team:0,ally:true,turret:true,tower:true,hp:40,mhp:40,hr:34,lvl:1,cdn:900,err:.15}];
+  bullets=[];shells=[];fx=[];resetAt=0;msg='';me=0;
+  wave=0;kills=0;pts=[120,70,40][diff];waveOver=0;queue=0;respawnAt=0;invT=0;
+  phase='place';bEnd=performance.now()+[90,75,60][diff]*1000;btool='fix';
+  document.getElementById('bmsg').textContent='Wähle ein Werkzeug und tippe auf die Basis.';
+  baseLabels();
+  updatePanel();
+}
+function startBaseWave(){
+  wave++;
+  queue=Math.round((wave<10?3+Math.floor(wave*.8)+rnd(2):12+(wave-10)*3+rnd(3))*[.8,1,1.3][diff]);
+  phase='fight';waveOver=0;bullets=[];fa=Math.random()*6.283;focus=[];sdc=0;
+  msg='Welle '+wave+(wave===5?' · Sniper!':wave===7?' · Nahkämpfer!':wave===10?' · Schwere Panzer!':'');msgT=performance.now()+1800;
+  sfx('wave');updatePanel();
+  const r=rec['x'+diff]||{w:0,k:0};if(wave>r.w){r.w=wave;rec['x'+diff]=r;saveRec()}
+}
+function tuneBase(t){
+  const l=t.lvl||1;
+  if(t.tower){t.cdn=Math.max(450,900-(l-1)*100)}
+  else if(t.tesla){t.need=Math.max(1000,2000-(l-1)*250);t.rng2=260+(l-1)*35;t.hp=2+l}
+  else if(t.arty){t.reload=Math.max(2500,7000-(l-1)*900);t.rad=[80,68,58][diff]+(l-1)*8;t.hp=2+l}
+  else if(t.turret){t.cdn=Math.max(150,330*Math.pow(.85,l-1));t.err=Math.max(.04,.25-(l-1)*.04);t.hp=2+l;t.bn=true;t.bj=.1;t.bpn=450}
+  else{t.cdn=Math.max(380,560-(l-1)*40);t.hp=l;t.dm=Math.max(.05,.3-(l-1)*.06);t.dr=36;t.dh=80}
+}
+function spawnBase(){
+  const w=wave;
+  const seen=flood(Math.min(R-1,Math.max(0,Math.floor(BC.y/S))),Math.min(C-1,Math.max(0,Math.floor(BC.x/S))));
+  for(let k=0;k<80;k++){
+    const c=rnd(C),r=rnd(R),x=(c+.5)*S,y=(r+.5)*S,d=Math.hypot(x-BC.x,y-BC.y);
+    if(!seen[r*C+c]||d<(k<50?RING*S+700:RING*S+350)||d>3200)continue;
+    const e={x,y,a:Math.atan2(BC.y-y,BC.x-x),alive:true,cd:0,team:1,spd:[.9,1,1.1][diff]*(w<10?.8:Math.min(1.25,.8+(w-9)*.03)),err:w<10?.55:Math.max(.08,.55-(w-9)*.03),cdn:w<10?1800:Math.max(700,1800-(w-9)*60),keep:300,on:0,sd:sdc++,pn:performance.now()+rnd(800)};
+    const rr=Math.random(),ty=w>=10&&rr<.14?'heavy':w>=7&&rr<.3?'melee':w>=5&&rr<.44?'sniper':'std';
+    setType(e,ty);e.spd*=e.tspd||1;e.cdn*=e.tcd||1;e.err*=e.terr||1;
+    if(ty==='sniper')e.dmg=16;else if(ty==='heavy')e.dmg=14;else if(ty==='melee')e.dmg=8;
+    e.rng=ty==='sniper'?720:ty==='melee'?300:520;e.keep=ty==='sniper'?420:ty==='melee'?70:200;
+    tanks.push(e);
+    return true;
+  }
+  return false;
+}
+// Das Labyrinth um die Basis wächst mit, wenn du dich dem Rand näherst; gelöscht wird erst am Rundenende
+function checkGrow(){
+  const L=tanks[me];
+  if(!L||!L.alive)return;
+  const c=Math.floor(L.x/S),r=Math.floor(L.y/S);
+  if(c<6)extend('L',8);else if(c>C-7)extend('R',8);else if(r<5)extend('U',6);else if(r>R-6)extend('D',6);
+}
+function baseTick(now){
+  for(const s of shells)if(s.tg&&s.tg.alive){s.x=s.tg.x;s.y=s.tg.y}
+  for(const s of shells)if(now>=s.t){
+    s.done=true;fx.push({x:s.x,y:s.y,t:now+450});sfx('kill');
+    for(const e of tanks)if(e.alive&&e.team===1&&Math.hypot(e.x-s.x,e.y-s.y)<(s.r||60)){if(e.hp>2)e.hp-=2;else e.alive=false}
+  }
+  shells=shells.filter(s=>!s.done);fx=fx.filter(f=>f.t>now);
+  zaps=zaps.filter(z=>z.t>now);
+  for(const e of tanks)if(e.team===1&&!e.alive&&!e.counted){e.counted=true;kills++;pts+=Math.round((e.type==='heavy'?2:1)*[2,1.5,1][diff])}
+  if(now>=thNext){thNext=now+800;computeThreats()}
+  for(const t of tanks)if(t.alive&&t.mount&&t.mount.hp<=0){t.alive=false;fx.push({x:t.x,y:t.y,t:now+450});sfx('kill')}
+  if(msgT&&now>msgT){msg='';msgT=0}
+  const P=tanks[me];
+  if(!P.alive){
+    if(!respawnAt)respawnAt=now+3000;
+    if(now>=respawnAt){const tw=tanks.find(t=>t.tower);respawnAt=0;P.alive=true;P.x=tw.x+70;P.y=tw.y;P.cd=0;invT=now+2000;sfx('ab')}
+  }
+  if(!waveOver){
+    let alive=0;
+    for(const t of tanks)if(t.alive&&t.team===1)alive++;
+    if(!focus.length||focus.some(w=>w.hp<=0))assignFocus();
+    if(queue>0&&alive<(wave>=10?30:18)&&now>=spNext&&spawnBase()){queue--;alive++;spNext=now+450+rnd(700)}
+    if(alive===0&&queue===0){
+      const bonus=Math.round((8+wave*2)*[1.8,1.3,1][diff]);
+      waveOver=1;pts+=bonus;msg='Welle '+wave+' geschafft! +'+bonus+' Schrott';msgT=now+3000;sfx('win');
+      bullets=[];for(const t of tanks)if(t.alive&&t.soldier){t.x=t.hx;t.y=t.hy}compact();phase='place';bEnd=now+[90,75,60][diff]*1000;updatePanel();
+    }
+  }
+}
+function baseTap(x,y){
+  const cx=BC.x,cy=BC.y,say=m=>{document.getElementById('bmsg').textContent=m},c=Math.floor(x/S),r=Math.floor(y/S);
+  const pay=n=>{n=Math.max(1,Math.round(n*CM()));if(pts<n){say('Zu wenig Schrott (nötig: '+n+')');return false}pts-=n;sfx('ab');return true};
+  const wallAtCell=walls.find(q=>q.c===c&&q.row===r);
+  if(btool==='fix'){
+    const w=wallAtCell;
+    if(w){
+      if(w.hp<=0){if(pay(10)){w.hp=w.mx;rebuildBase();say('Mauerstück neu aufgebaut')}}
+      else if(w.hp<w.mx){if(pay(Math.ceil((w.mx-w.hp)/10))){w.hp=w.mx;say('Mauerstück repariert')}}
+      else if(w.lvl<5){if(pay(8+6*w.lvl)){w.lvl++;w.mx=Math.round(60*(1+.5*(w.lvl-1)));w.hp=w.mx;say('Mauerstück auf Stufe '+w.lvl)}}
+      else say('Mauerstück ist schon auf Maximum');
+      return;
+    }
+    const near=tanks.filter(t=>t.alive&&t.team===0&&t.ally&&Math.hypot(t.x-x,t.y-y)<(t.tower?40:22)).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0];
+    if(!near){say('Hier ist nichts zum Reparieren oder Verbessern.');return}
+    if(near.tower){
+      if(near.hp<near.mhp){if(pay(Math.ceil((near.mhp-near.hp)/2))){near.hp=near.mhp;say('Turm repariert')}}
+      else if(near.lvl<5){if(pay(25+15*near.lvl)){near.lvl++;near.mhp+=15;near.hp=near.mhp;tuneBase(near);say('Turm auf Stufe '+near.lvl)}}
+      else say('Der Turm ist schon auf Maximum');
+    }else if((near.lvl||1)<5){
+      const cost=near.tesla?18+10*near.lvl:near.arty?20+10*near.lvl:near.turret?10+8*near.lvl:8+6*near.lvl;
+      if(pay(cost)){near.lvl++;tuneBase(near);say('Einheit auf Stufe '+near.lvl)}
+    }else say('Diese Einheit ist schon auf Maximum');
+    return;
+  }
+  if(btool==='wall'){
+    if(wallAtCell){if(wallAtCell.hp<=0){if(pay(8)){wallAtCell.hp=wallAtCell.mx;rebuildBase();say('Mauerstück neu aufgebaut')}}else say('Hier ist schon eine Mauer (zum Reparieren das andere Werkzeug nutzen).');return}
+    if(c<1||r<1||c>=C-1||r>=R-1){say('Zu nah am Kartenrand.');return}
+    if(!walls.some(q=>q.hp>0&&Math.abs(q.c-c)<=1&&Math.abs(q.row-r)<=1)){say('Neue Mauer muss an eine bestehende anschließen.');return}
+    if(Math.hypot((c+.5)*S-cx,(r+.5)*S-cy)<60||tanks.some(t=>t.alive&&Math.hypot(t.x-(c+.5)*S,t.y-(r+.5)*S)<48)){say('Hier steht schon etwas.');return}
+    if(!pay(8))return;
+    const w={c,row:r,lvl:1,hp:60,mx:60};w.r=[c*S,r*S,S,S];w.r.W=w;w.r.o=true;walls.push(w);rebuildBase();
+    say('Mauer erweitert');
+    return;
+  }
+  const cost={turret:15,soldat:10,arty:30,tesla:25}[btool],cap=CAPS[btool][diff];
+  const o={a:0,alive:true,cd:0,team:0,ally:true,lvl:1};
+  if((btool==='turret'||btool==='tesla')&&wallAtCell&&wallAtCell.hp>0){
+    if(tanks.some(t=>t.alive&&t.mount===wallAtCell)){say('Auf diesem Mauerstück steht schon etwas.');return}
+    if(unitCount(btool)>=cap){say('Maximal '+cap+' erreicht.');return}
+    if(!pay(cost))return;
+    o.x=wallAtCell.r[0]+S/2;o.y=wallAtCell.r[1]+S/2;o.turret=true;o.mount=wallAtCell;if(btool==='tesla')o.tesla=true;
+    tuneBase(o);tanks.push(o);say(btool==='tesla'?'Tesla-Turm auf der Mauer gebaut':'Geschütz auf der Mauer gebaut');
+    return;
+  }
+  const key=c+','+r;
+  if(!isSlot(c,r)){say('Hier ist kein Bauplatz: nur Quadrate im Inneren der Basis (Geschütz und Tesla auch auf Mauerstücken).');return}
+  if(tanks.some(t=>t.alive&&t.slot===key)){say('Dieses Quadrat ist schon belegt.');return}
+  if(unitCount(btool)>=cap){say('Maximal '+cap+' erreicht.');return}
+  if(!pay(cost))return;
+  o.x=(c+.5)*S;o.y=(r+.5)*S;o.slot=key;
+  if(btool==='turret')o.turret=true;
+  else if(btool==='tesla'){o.turret=true;o.tesla=true}
+  else if(btool==='arty'){o.turret=true;o.arty=true}
+  else{o.soldier=true;o.hx=o.x;o.hy=o.y;o.side=rnd(2);o.a=rnd(628)/100}
+  tuneBase(o);tanks.push(o);
+  say({turret:'Geschütz gebaut',soldat:'Soldat aufgestellt',arty:'Artillerie aufgestellt',tesla:'Tesla-Turm gebaut'}[btool]);
+}
+// Sicht ohne deine Mauern: nur Wände des Labyrinths zählen als Hindernis (deine Mauerstücke darf der Gegner beschießen)
+function clearM(a,b){
+  const n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/6);
+  for(let i=1;i<n;i++)if(baseWall(a.x+(b.x-a.x)*i/n,a.y+(b.y-a.y)*i/n,0))return false;
+  return true;
+}
+// Der Gegner wählt pro Seite ein Mauerstück als Schwerpunkt, mehrere Gegner greifen es gemeinsam an
+function assignFocus(){
+  const alive=walls.filter(w=>w.hp>0);
+  if(!alive.length){focus=[];return}
+  let n=queue;
+  for(const t of tanks)if(t.alive&&t.team===1)n++;
+  const k=Math.max(2,Math.min(5,Math.ceil(n/5)));
+  focus=[];
+  for(let i=0;i<k;i++){
+    const an=fa+i*2*Math.PI/k,ux=Math.cos(an),uy=Math.sin(an);
+    let best=null,bs=-1e9;
+    for(const w of alive){
+      const cx=w.r[0]+S/2-BC.x,cy=w.r[1]+S/2-BC.y,sc=(cx*ux+cy*uy)-Math.abs(cx*uy-cy*ux)*2;
+      if(sc>bs){bs=sc;best=w}
+    }
+    focus.push(best);
+  }
+}
+// Abstand zum Mauerstück: anfangs nah (in Reichweite von Tesla und Geschützen), später weiter hinten
+function standDist(t){return t.type==='melee'?90:Math.min(300,wave>5?150+(wave-5)*25:150)}
+function firstWall(a,b){
+  const n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/6);
+  for(let i=1;i<n;i++){
+    const q=baseWall(a.x+(b.x-a.x)*i/n,a.y+(b.y-a.y)*i/n,2);
+    if(q)return q.W&&q.W.hp>0?q.W:null;
+  }
+  return null;
+}
+// Liegt die Basis auf der Geraden zum Ziel, wird außen um die Mauer herumgelaufen statt dagegen
+function routeOutside(t,g){
+  const ro=ringR+S*.9,bx=Math.hypot(t.x-BC.x,t.y-BC.y);
+  if(bx<ro)return g;
+  const ax=g.x-t.x,ay=g.y-t.y,al=Math.hypot(ax,ay)||1;
+  const k=Math.max(0,Math.min(1,((BC.x-t.x)*ax+(BC.y-t.y)*ay)/(al*al)));
+  if(Math.hypot(t.x+ax*k-BC.x,t.y+ay*k-BC.y)>ro)return g;
+  const at=Math.atan2(t.y-BC.y,t.x-BC.x),da=norm(Math.atan2(g.y-BC.y,g.x-BC.x)-at),step=Math.min(Math.abs(da),.5)*(da<0?-1:1);
+  return{x:BC.x+Math.cos(at+step)*bx,y:BC.y+Math.sin(at+step)*bx};
+}
+function baseAI(t){
+  const p=nearest(t);
+  if(!p)return{};
+  if(t.dm!==undefined){const dg=dodge(t);if(dg)return dg}
+  const now=performance.now(),dist=Math.hypot(p.x-t.x,p.y-t.y);
+  if(!(now<t.on)){t.on=now+800;t.off=(Math.random()-.5)*(t.err||.4)}
+  const steer=(g,go)=>{const e=norm(Math.atan2(g.y-t.y,g.x-t.x)-t.a);return{l:e<-.07,r:e>.07,f:go&&Math.abs(e)<.7}};
+  // freie Sicht auf eine Einheit (Durchbruch, Soldaten draußen): direkt angreifen
+  if(clear(t,p)&&dist<(t.rng||520)){
+    const d=norm(Math.atan2(p.y-t.y,p.x-t.x)+(t.off||0)-t.a);
+    return{l:d<-.07,r:d>.07,f:Math.abs(d)<.7&&dist>(t.keep??200),s:Math.abs(d)<.1};
+  }
+  let fw=focus.length?focus[(t.sd||0)%focus.length]:null;
+  // Ziel hinter meiner Mauer: das Mauerstück in der Schusslinie angreifen, nicht dagegen fahren
+  if(!clear(t,p)&&clearM(t,p)){const b=firstWall(t,p);if(b)fw=b}
+  if(fw&&fw.hp>0){
+    const wx=fw.r[0]+S/2,wy=fw.r[1]+S/2,dx=wx-BC.x,dy=wy-BC.y,dl=Math.hypot(dx,dy)||1,st=standDist(t);
+    const pp={x:wx+dx/dl*st,y:wy+dy/dl*st},dW=Math.hypot(wx-t.x,wy-t.y);
+    if(dW<=st+45&&dW<(t.rng||520)&&clearM(t,{x:wx,y:wy})){
+      const d=norm(Math.atan2(wy-t.y,wx-t.x)+(t.off||0)*.4-t.a);
+      return{l:d<-.05,r:d>.05,s:Math.abs(d)<.08};
+    }
+    const via=clearM(t,pp)?routeOutside(t,pp):(path(t,pp)||pp);
+    return steer(via,Math.hypot(pp.x-t.x,pp.y-t.y)>25);
+  }
+  const tg=clearM(t,p)?p:(path(t,p)||p);
+  return steer(tg,dist>(t.keep??200));
+}
+// Soldaten: geordnet auf bedrohte Mauerstücke verteilt; bricht eine Mauer, Ausfall durch die Lücke und danach zurück
+function computeThreats(){
+  const es=tanks.filter(t=>t.alive&&t.team===1),th=new Set(focus.filter(w=>w&&w.hp>0));
+  for(const w of walls)if(w.hp>0&&w.hp<w.mx*.5&&es.some(e=>Math.hypot(e.x-(w.r[0]+S/2),e.y-(w.r[1]+S/2))<700))th.add(w);
+  threats=[...th];
+  ringR=RING*S+S*.7;
+  for(const w of walls)if(w.hp>0)ringR=Math.max(ringR,Math.hypot(w.r[0]+S/2-BC.x,w.r[1]+S/2-BC.y)+S*.7);
+  // Lücken, vor denen Gegner stehen
+  const brs=walls.filter(w=>w.hp<=0&&es.some(e=>Math.hypot(e.x-(w.r[0]+S/2),e.y-(w.r[1]+S/2))<900)).slice(0,3);
+  // Richtungen (8 Sektoren), aus denen Gegner kommen
+  const sec=new Map();
+  for(const e of es){
+    if(Math.hypot(e.x-BC.x,e.y-BC.y)>ringR+800)continue;
+    const b=Math.floor(((Math.atan2(e.y-BC.y,e.x-BC.x)+Math.PI)/(2*Math.PI))*8)%8,o=sec.get(b)||{n:0,sx:0,sy:0};
+    o.n++;o.sx+=e.x-BC.x;o.sy+=e.y-BC.y;sec.set(b,o);
+  }
+  const secs=[...sec.values()].sort((a,b)=>b.n-a.n).slice(0,6).map(o=>Math.atan2(o.sy,o.sx));
+  const sol=tanks.filter(t=>t.alive&&t.soldier);
+  const nb=Math.max(2,Math.round(sol.length*.4));
+  sol.forEach((t,i)=>{
+    t.rk=i;
+    if(brs.length&&i<nb)t.post={k:'breach',w:brs[i%brs.length],i};
+    else if(secs.length)t.post={k:'sector',ang:secs[i%secs.length],i};
+    else t.post=null;
+  });
+  sCount=sol.length;
+}
+function baseAlly(t){
+  if(t.tesla)return teslaAI(t);
+  if(t.arty)return artyAI(t);
+  if(t.turret)return turretAI(t);
+  return soldierAI(t);
+}
+// Tesla-Turm: bis zu 3 Gegner gleichzeitig im Strahl; wer insgesamt 2 Sekunden getroffen wurde, fällt (Stufen verkürzen das)
+function nearestInBase(t){
+  let best=null,bd=1e9;
+  for(const e of tanks)if(e.alive&&e.team===1&&Math.hypot(e.x-BC.x,e.y-BC.y)<RING*S-S*.4){
+    const d=Math.hypot(e.x-t.x,e.y-t.y);
+    if(d<bd){bd=d;best=e}
+  }
+  return best;
+}
+function teslaAI(t){
+  const now=performance.now(),dt=Math.min(100,now-(t.lt||now));
+  t.lt=now;
+  const rg=t.rng2||260;
+  const ok=e=>e.alive&&e.team===1&&Math.hypot(e.x-t.x,e.y-t.y)<rg&&(t.mount||Math.hypot(e.x-BC.x,e.y-BC.y)<RING*S-S*.4);
+  t.tg=(t.tg||[]).filter(ok);
+  if(t.tg.length<3){
+    const c=tanks.filter(e=>ok(e)&&!t.tg.includes(e)).sort((a,b)=>Math.hypot(a.x-t.x,a.y-t.y)-Math.hypot(b.x-t.x,b.y-t.y));
+    while(t.tg.length<3&&c.length)t.tg.push(c.shift());
+  }
+  for(const e of t.tg){
+    e.zt=(e.zt||0)+dt;
+    if(e.zt>=(t.need||2000)){e.zt=0;if(e.hp>1){e.hp--;e.hit=now+180}else e.alive=false}
+  }
+  return{};
+}
+function artyRange(t){return [1500,1200,950][diff]+((t.lvl||1)-1)*80}
+function artyAI(t){
+  const now=performance.now();
+  if(t.sv===undefined)t.sv=now+3000;
+  if(now>=t.sv){
+    const rg=artyRange(t);
+    const c=tanks.filter(e=>e.alive&&e.team===1&&Math.hypot(e.x-t.x,e.y-t.y)<rg&&!shells.some(s=>s.tg===e)).sort((a,b)=>Math.hypot(a.x-t.x,a.y-t.y)-Math.hypot(b.x-t.x,b.y-t.y));
+    if(c.length){shells.push({x:c[0].x,y:c[0].y,t:now+1500,tg:c[0],r:t.rad||60});t.sv=now+(t.reload||7000);t.flash=now+400}
+    else t.sv=now+500;
+  }
+  return{};
+}
+function soldierAI(t){
+  const dg=dodge(t);
+  if(dg)return dg;
+  const p=nearest(t),ri=RING*S-S*.6;
+  const inside=tanks.some(o=>o.alive&&o.team===1&&Math.hypot(o.x-BC.x,o.y-BC.y)<ri);
+  const tIn=Math.hypot(t.x-BC.x,t.y-BC.y)<ri;
+  const steer=(x,y,stop)=>{
+    const dx=x-t.x,dy=y-t.y;
+    if(Math.hypot(dx,dy)<(stop||25))return{};
+    const e=norm(Math.atan2(dy,dx)-t.a);
+    return{l:e<-.07,r:e>.07,f:Math.abs(e)<.7};
+  };
+  const breaches=walls.filter(w=>w.hp<=0);
+  const nearB=(x,y)=>{let bw=breaches[0],bd=1e9;for(const w of breaches){const d2=Math.hypot(w.r[0]+S/2-x,w.r[1]+S/2-y);if(d2<bd){bd=d2;bw=w}}return bw};
+  const po=t.post;
+  if(p){
+    const los=clear(t,p),dist=Math.hypot(p.x-t.x,p.y-t.y),d=norm(Math.atan2(p.y-t.y,p.x-t.x)-t.a);
+    if(inside)return{l:d<-.07,r:d>.07,f:Math.abs(d)<.7&&dist>140,s:los&&Math.abs(d)<.1};
+    // Lückenwache: nur sie stürmt hinaus, und nur gegen Gegner direkt vor der Lücke
+    if(po&&po.k==='breach'&&po.w){
+      const bx=po.w.r[0]+S/2,by=po.w.r[1]+S/2;
+      let ne=null,nd=1e9;
+      for(const e of tanks)if(e.alive&&e.team===1){const dd=Math.hypot(e.x-bx,e.y-by);if(dd<nd){nd=dd;ne=e}}
+      if(ne&&nd<520){
+        if(tIn&&Math.hypot(bx-t.x,by-t.y)>70)return steer(bx,by,40);
+        const dd=norm(Math.atan2(ne.y-t.y,ne.x-t.x)-t.a),dn=Math.hypot(ne.x-t.x,ne.y-t.y);
+        return{l:dd<-.07,r:dd>.07,f:Math.abs(dd)<.7&&dn>150,s:clear(t,ne)&&Math.abs(dd)<.1};
+      }
+    }
+    if(los&&dist<750&&tIn)return{l:d<-.07,r:d>.07,s:Math.abs(d)<.1};
+  }
+  if(!tIn){
+    if(breaches.length){const bw=nearB(t.x,t.y);return steer(bw.r[0]+S/2,bw.r[1]+S/2,40)}
+    return steer(t.hx,t.hy);
+  }
+  if(po){
+    const lat=((po.i%3)-1)*42;
+    if(po.k==='breach'&&po.w){
+      const bx=po.w.r[0]+S/2,by=po.w.r[1]+S/2,ux=BC.x-bx,uy=BC.y-by,ul=Math.hypot(ux,uy)||1;
+      return steer(bx+ux/ul*75+(-uy/ul)*lat,by+uy/ul*75+(ux/ul)*lat,22);
+    }
+    if(po.k==='sector'){
+      const rr=RING*S-S*1.4,gx=BC.x+Math.cos(po.ang)*rr,gy=BC.y+Math.sin(po.ang)*rr;
+      return steer(gx+(-Math.sin(po.ang))*lat,gy+Math.cos(po.ang)*lat,22);
+    }
+  }
+  return steer(t.hx,t.hy,22);
+}
+function hudBase(){
+  const tw=tanks.find(t=>t.tower);
+  let b=queue;
+  for(const t of tanks)if(t.alive&&t.team===1)b++;
+  const s=(phase==='place'?'Aufbau vor Welle '+(wave+1)+' · noch '+Math.max(0,Math.ceil((bEnd-performance.now())/1000))+' s':'Welle '+wave+' · Gegner: '+b)+' · Turm: '+(tw?tw.hp:0)+'/'+(tw?tw.mhp:0)+' · Schrott: '+pts+' · Kills: '+kills;
+  if(s!==lastHud){hudtxt.textContent=s;lastHud=s}
+  baseLabels();
+  drawMini2();
+}
+function drawBase(){
+  if(mode==='base'&&phase==='place'){
+    const c0=Math.floor(BC.x/S),r0=Math.floor(BC.y/S);
+    for(let r=r0-5;r<=r0+5;r++)for(let c=c0-5;c<=c0+5;c++){
+      if(!isSlot(c,r))continue;
+      const key=c+','+r,occ=tanks.some(t=>t.alive&&t.slot===key);
+      g.strokeStyle=col.wall;g.globalAlpha=occ?.55:.28;g.lineWidth=1.5;g.strokeRect(c*S+6,r*S+6,S-12,S-12);g.globalAlpha=1;
+    }
+  }
+  if(mode==='base'&&phase==='place')for(const t of tanks)if(t.alive&&t.team===0&&(t.arty||t.tesla)){g.strokeStyle=col.a;g.globalAlpha=.35;g.lineWidth=2;g.beginPath();g.arc(t.x,t.y,t.arty?artyRange(t):(t.rng2||240),0,7);g.stroke();g.globalAlpha=1}
+  if(mode!=='base')return;
+  for(const w of walls){
+    if(w.hp<=0){g.strokeStyle=col.p[1];g.globalAlpha=.5;g.lineWidth=3;g.beginPath();g.moveTo(w.r[0]+12,w.r[1]+12);g.lineTo(w.r[0]+S-12,w.r[1]+S-12);g.moveTo(w.r[0]+S-12,w.r[1]+12);g.lineTo(w.r[0]+12,w.r[1]+S-12);g.stroke();g.globalAlpha=1;continue}
+    g.fillStyle=col.a;g.globalAlpha=.25+.65*w.hp/w.mx;g.fillRect(w.r[0],w.r[1],S,S);g.globalAlpha=1;
+    g.fillStyle=col.fg;
+    for(let i=0;i<w.lvl;i++)g.fillRect(w.r[0]+7+i*9,w.r[1]+S-13,6,6);
+  }
+  const tw=tanks.find(t=>t.tower);
+  if(tw&&tw.alive){
+    g.fillStyle=col.wall;g.fillRect(tw.x-30,tw.y-44,60,6);
+    g.fillStyle=col.a;g.fillRect(tw.x-30,tw.y-44,60*tw.hp/tw.mhp,6);
+  }
+}
+
+function spawnOne(){
+  const L=tanks[me],[pr,pc]=cellOf(L),seen=flood(pr,pc);
+  for(let k=0;k<80;k++){
+    const c=rnd(C),r=rnd(R),x=(c+.5)*S,y=(r+.5)*S,d=Math.hypot(x-L.x,y-L.y);
+    if(!seen[r*C+c]||d<(k<50?650:350)||d>1600)continue;
+    const w=wave;
+    const e={x,y,a:Math.random()*6.28,alive:true,cd:0,team:1,
+      spd:w<2?.65:w<5?.75:Math.min(1.35,.75+(w-4)*.05),
+      bn:w>=5&&Math.random()<Math.min(1,(w-4)*.15),
+      bj:Math.max(.04,.3-(w-4)*.025),bpn:Math.max(300,900-(w-4)*60),
+      err:w<2?.8:Math.max(.06,.55-w*.04),cdn:w<2?1900:Math.max(500,1500-w*60),pn:performance.now()+rnd(800)};
+    const tf=[.55,.8,1][diff],rr=Math.random(),ty=w>=6&&rr<.14*tf?'heavy':w>=4&&rr<.3*tf?'melee':w>=3&&rr<.44*tf?'sniper':'std';
+    setType(e,ty);e.spd*=(e.tspd||1)*[.9,.96,1][diff];e.cdn*=(e.tcd||1)*[1.25,1.1,1][diff];e.err*=(e.terr||1)*[1.3,1.12,1][diff];if(ty==='sniper'&&w>=5)e.bn=true;e.salv=w>=4&&Math.random()<[0,.12,.25][diff];
+    tanks.push(e);
+    return true;
+  }
+  return false;
+}
+
+function startWave(){
+  tanks.forEach(t=>{if(mode==='endless'&&t.ally&&t.alive&&t.team===0)tuneAlly(t)});
+  queue=Math.max(3,Math.round((wave<2?3+rnd(3):Math.min(60,3+Math.floor(wave*1.8)+rnd(3)))*[.88,.94,1][diff]));
+  {const r=rec['e'+diff]||{w:0,k:0};if(wave>r.w){r.w=wave;rec['e'+diff]=r;saveRec()}}
+  if(wave>best){best=wave;try{localStorage.setItem('tdBest',String(best))}catch(e){}}
+}
+
+function newEndless(){
+  setSize(30,20,90);maze();braid(hw,vw,braidP());rebuildRects();colors();
+  tanks=[{x:(C/2+.5)*S,y:(R/2+.5)*S,a:0,alive:true,cd:0,team:0}];
+  bullets=[];shells=[];fx=[];resetAt=0;me=0;phase='fight';
+  wave=1;kills=0;pts=0;waveOver=0;joker=false;invT=0;gather=false;gq=[];armyQ=[];rgNext=0;ggoal=[];skillBtn.textContent='Sammeln';skillBtn.classList.remove('on');
+  try{best=Math.max(best,+localStorage.getItem('tdBest')||0)}catch(e){}
+  startWave();
+  msg='Wave 1';msgT=performance.now()+1800;
+}
+
+function compact(){
+  const keep=[],map=new Map();
+  tanks.forEach((t,i)=>{if(t.alive||i===me){map.set(i,keep.length);keep.push(t)}});
+  bullets.forEach(b=>{b.o=map.has(b.o)?map.get(b.o):-1});
+  me=map.get(me);tanks=keep;
+}
+
+function endlessTick(now){
+  while(armyQ.length&&now>=armyQ[0].t){armyQ.shift();spawnArmy()}
+  regroup(now);
+  for(const s of shells)if(s.tg&&s.tg.alive){s.x=s.tg.x;s.y=s.tg.y}
+  for(const s of shells)if(now>=s.t){
+    s.done=true;fx.push({x:s.x,y:s.y,t:now+450});
+    for(const e of tanks)if(e.alive&&e.team===1&&Math.hypot(e.x-s.x,e.y-s.y)<60)e.alive=false;
+  }
+  shells=shells.filter(s=>!s.done);fx=fx.filter(f=>f.t>now);
+  for(const e of tanks)if(e.team===1&&!e.alive&&!e.counted){e.counted=true;if(!e.gone){kills++;pts++}}
+  if(msgT&&now>msgT){msg='';msgT=0}
+  if(!waveOver){
+    let alive=0;
+    for(const t of tanks)if(t.alive&&t.team===1)alive++;
+    if(queue>0&&alive<14&&now>=spNext&&spawnOne()){queue--;alive++;spNext=now+450+rnd(700)}
+    if(alive===0&&queue===0){waveOver=now+3000;msg='Wave '+wave+' geschafft!';msgT=now+2500;sfx('win');compact()}
+  }else if(now>=waveOver){
+    waveOver=0;wave++;startWave();msg='Wave '+wave+(wave===3?' · Sniper!':wave===4?' · Nahkämpfer!':wave===6?' · Schwere Panzer!':'');msgT=now+1800;sfx('wave');
+  }
+  checkExtend();
+}
+
+function useAbility(k){
+  if(mode!=='endless'||!running||resetAt)return;
+  const a=AB[k],L=tanks[me],n=performance.now();
+  if(!L||!L.alive||wave<a.wave||pts<a.cost[diff]||(k==='joker'&&(joker||performance.now()<invT)))return;
+  pts-=a.cost[diff];sfx('ab');vib(40);
+  if(k==='joker'){joker=true;return}
+  if(k==='turret'){
+    let x=L.x+Math.cos(L.a)*34,y=L.y+Math.sin(L.a)*34;
+    if(wallAt(x,y)||!clear(L,{x,y})){x=L.x;y=L.y}
+    addAlly({x,y,a:L.a,alive:true,cd:0,team:0,ally:true,turret:true,side:0});
+    return;
+  }
+  if(k==='army'){
+    for(let j=0;j<2;j++)addAlly({x:L.x+(j?5:-5),y:L.y,a:L.a,alive:true,cd:0,team:0,ally:true,army:true,side:j});
+    for(let j=0;j<10;j++)armyQ.push({t:n+600*(j+1)});
+    return;
+  }
+  if(k==='elite'){
+    for(let j=0;j<3;j++){const o={x:L.x+(j-1)*5,y:L.y,a:L.a,alive:true,cd:0,team:0,ally:true,side:j%2,elite:true,mb:2};addAlly(o)}
+    return;
+  }
+  if(k==='salvo'){
+    for(let j=0;j<7;j++){
+      const an=L.a+(j-3)*.17;
+      bullets.push({x:muzzle(L,an).x,y:muzzle(L,an).y,vx:Math.cos(an)*4.2,vy:Math.sin(an)*4.2,o:me,team:0,mine:true,mb:[3,2,1][diff],n:0,die:n+7000});
+    }
+  }else if(k==='helpers'){
+    for(let j=0;j<2;j++){const o={x:L.x+(j?4:-4),y:L.y,a:L.a,alive:true,cd:0,team:0,ally:true,side:j};addAlly(o)}
+  }else{
+    for(const e of tanks.filter(e=>e.alive&&e.team===1&&Math.hypot(e.x-L.x,e.y-L.y)<1100).sort((a,b)=>Math.hypot(a.x-L.x,a.y-L.y)-Math.hypot(b.x-L.x,b.y-L.y)).slice(0,4+rnd(2))){
+      shells.push({x:e.x,y:e.y,t:n+1200,tg:e});
+      
+    }
+  }
+}
+
+// Endlos-Gegner: Zielfehler und Tempo hängen von der Wave ab, Abprall-Schüsse erst ab Wave 5
+// Sackgassen entfernen: Zellen mit drei Wänden bekommen mit Wahrscheinlichkeit p einen weiteren Durchgang
+function braid(H,V,p,only){
+  if(p<=0)return;
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+    if(only&&!only(r,c))continue;
+    const w=[H[r][c],H[r+1][c],V[r][c],V[r][c+1]];
+    if(w.filter(Boolean).length!==3||Math.random()>p)continue;
+    const o=[];
+    if(w[0]&&r>0)o.push(0);
+    if(w[1]&&r<R-1)o.push(1);
+    if(w[2]&&c>0)o.push(2);
+    if(w[3]&&c<C-1)o.push(3);
+    if(!o.length)continue;
+    const d=o[rnd(o.length)];
+    if(d===0)H[r][c]=false;else if(d===1)H[r+1][c]=false;else if(d===2)V[r][c]=false;else V[r][c+1]=false;
+  }
+}
+const braidP=()=>[.95,.85,.6][diff];
+// Reaktionszeit der Endlos-Gegner nach dem ersten Sichtkontakt (ms), sinkt mit der Wave
+const reactMs=()=>{const w=wave,b=w<2?700:w<3?500:w<4?350:w<6?250:w<10?180:120;return b*[1.4,1,.5][diff]};
+
+// Endlos-Verbündete: Hilfsbots nutzen auf Leicht und Mittel Abprallwinkel, auf Leicht weichen sie aus; Elite-Bots können alles
+// Verbündete werden mit den Waves stärker (Tempo, Zielgenauigkeit, Schussfolge, Ausweichen)
+function addAlly(o){tuneAlly(o);tanks.push(o);if(gather&&!o.turret)gq.push(o)}
+
+// Geschütz: steht fest, schießt doppelt so schnell wie ein Panzer, Abprallwinkel erst später
+function turretAI(t){
+  const p=(mode==='base'&&!t.mount)?nearestInBase(t):nearest(t);
+  if(!p)return{};
+  if(t.bn){
+    planAim(t,p);
+    if(t.aim!=null){const d=norm(t.aim-t.a);return{l:d<-.03,r:d>.03,s:Math.abs(d)<.045}}
+  }
+  if(!clear(t,p))return{};
+  const now=performance.now();
+  if(!(now<t.on)){t.on=now+700;t.off=(Math.random()-.5)*(t.err||.3)}
+  const d=norm(Math.atan2(p.y-t.y,p.x-t.x)+(t.off||0)-t.a);
+  return{l:d<-.05,r:d>.05,s:Math.abs(d)<.1};
+}
+
+// Armee-Bots: laufen vom Rand Richtung Mitte und kämpfen unterwegs
+function armyAI(t){
+  const p=nearest(t),now=performance.now(),c={x:AW/2,y:AH/2};
+  if(p&&t.bn){
+    planAim(t,p);
+    if(t.aim!=null){const d=norm(t.aim-t.a);return{l:d<-.03,r:d>.03,s:Math.abs(d)<.045}}
+  }
+  if(p&&Math.hypot(p.x-t.x,p.y-t.y)<520&&clear(t,p)){
+    if(!(now<t.on)){t.on=now+700;t.off=(Math.random()-.5)*(t.err||.3)}
+    const d=norm(Math.atan2(p.y-t.y,p.x-t.x)+(t.off||0)-t.a);
+    return{l:d<-.07,r:d>.07,f:Math.abs(d)<.7&&Math.hypot(p.x-t.x,p.y-t.y)>150,s:Math.abs(d)<.1};
+  }
+  const dc=Math.hypot(c.x-t.x,c.y-t.y);
+  if(dc<=300)return roamStep(t);
+  const tg=path(t,c)||c;
+  const d=norm(Math.atan2(tg.y-t.y,tg.x-t.x)-t.a);
+  return{l:d<-.07,r:d>.07,f:Math.abs(d)<.7};
+}
+
+// Hilfspanzer teilen sich (ohne Sammelbefehl) in Gruppen zu 3 bis 5 auf und ziehen einzeln umher
+function regroup(now){
+  if(now<rgNext)return;
+  rgNext=now+1200;
+  const L=tanks[me];
+  if(!L||!L.alive)return;
+  const al=tanks.filter((t,i)=>t.alive&&t.team===0&&t.ally&&!t.turret&&i!==me);
+  const n=al.length,gc=Math.max(1,Math.ceil(n/5)),sz=Math.max(1,Math.ceil(n/gc));
+  al.forEach((t,i)=>{t.gid=Math.floor(i/sz)});
+  const es=tanks.filter(e=>e.alive&&e.team===1),taken=new Set();
+  const [pr,pc]=cellOf(L),seen=flood(pr,pc);
+  for(let g=0;g<gc;g++){
+    const mem=al.filter(t=>t.gid===g);
+    if(!mem.length)continue;
+    const cx=mem.reduce((a,t)=>a+t.x,0)/mem.length,cy=mem.reduce((a,t)=>a+t.y,0)/mem.length;
+    if(es.length){
+      // zu den Gegnern hinfahren und sie besiegen: jede Gruppe nimmt den nächsten noch nicht angesteuerten Gegner
+      let best=null,bd=1e9;
+      for(const e of es){const d=Math.hypot(e.x-cx,e.y-cy)+(taken.has(e)?400:0);if(d<bd){bd=d;best=e}}
+      taken.add(best);
+      ggoal[g]={x:best.x,y:best.y,until:now+1200,hunt:true};
+      continue;
+    }
+    const o=ggoal[g];
+    if(o&&now<o.until&&!o.hunt)continue;
+    for(let k=0;k<40;k++){
+      const c=rnd(C),r=rnd(R),x=(c+.5)*S,y=(r+.5)*S,d=Math.hypot(x-L.x,y-L.y);
+      if(seen[r*C+c]&&d>500&&d<1500){ggoal[g]={x,y,until:now+14000+rnd(6000)};break}
+    }
+  }
+}
+function roamStep(t){
+  const g=ggoal[t.gid||0];
+  if(!g)return{};
+  if(!g.hunt&&Math.hypot(g.x-t.x,g.y-t.y)<130){g.until=0;return{}}
+  const q=path(t,g)||g,d=norm(Math.atan2(q.y-t.y,q.x-t.x)-t.a);
+  return{l:d<-.07,r:d>.07,f:Math.abs(d)<.7};
+}
+// Gegner-Salve auf Truppenansammlungen (nur wenn mindestens 3 deiner Einheiten dicht beieinander stehen)
+function troopSalvo(t,i,now){
+  if(!t.salv||!t.alive)return;
+  if(t.sv2===undefined)t.sv2=now+8000;
+  if(t.ann){
+    if(diff===1)t.flash=performance.now()+120;
+    if(now<t.ann)return;
+    t.ann=0;
+    const p=nearest(t);
+    if(p){
+      const ang=Math.atan2(p.y-t.y,p.x-t.x),n=4+rnd(2);
+      for(let j=0;j<n;j++){
+        const a=ang+(j-(n-1)/2)*.2;
+        if(safeAng(t,a))bullets.push({x:muzzle(t,a).x,y:muzzle(t,a).y,vx:Math.cos(a)*4.2,vy:Math.sin(a)*4.2,o:i,team:1,mb:t.mb,n:0,die:now+7000});
+      }
+    }
+    t.sv2=now+[0,20000,14000][diff];
+    return;
+  }
+  if(now<t.sv2)return;
+  const p=nearest(t);
+  if(!p||Math.hypot(p.x-t.x,p.y-t.y)>700||!clear(t,p))return;
+  let c=0;
+  for(const o of tanks)if(o.alive&&o.team===0&&Math.hypot(o.x-p.x,o.y-p.y)<230)c++;
+  if(c>=3)t.ann=now+(diff===2?250:900);
+}
+function spawnArmy(){
+  const L=tanks[me];
+  if(!L||!L.alive)return;
+  const [pr,pc]=cellOf(L),seen=flood(pr,pc);
+  for(let k=0;k<80;k++){
+    const edge=rnd(4),c=edge<2?(edge?C-2:1):1+rnd(C-2),r=edge<2?1+rnd(R-2):(edge===2?1:R-2);
+    const x=(c+.5)*S,y=(r+.5)*S;
+    if(!seen[r*C+c]||Math.hypot(x-L.x,y-L.y)<500)continue;
+    addAlly({x,y,a:Math.atan2(AH/2-y,AW/2-x),alive:true,cd:0,team:0,ally:true,army:true,side:rnd(2),pn:performance.now()+rnd(500)});
+    return;
+  }
+}
+
+function tuneAlly(t){
+  const w=wave,e=t.elite?1:0;
+  if(t.turret){t.cdn=Math.max(200,280-(w-1)*5);t.bn=w>=6;t.bj=Math.max(.05,.16-(w-1)*.008);t.bpn=Math.max(300,560-(w-1)*15);t.err=Math.max(.05,.3-(w-1)*.02);t.spd=0;return}
+  if(t.army){const q=[{spd:1,bn:true,bj:.12,bpn:520,cdn:520,err:.12,dm:.4},{spd:.9,bn:false,bj:.3,bpn:700,cdn:800,err:.45,dm:undefined},{spd:1,bn:w>=6,bj:.2,bpn:600,cdn:650,err:.25,dm:undefined}][diff];Object.assign(t,q);t.cdn=Math.max(380,t.cdn-(w-1)*8);t.err=Math.max(.06,t.err-(w-1)*.01);return}
+  t.spd=(e?1.3:1)+Math.min(.3,(w-1)*.025);
+  t.bn=!!e||diff<2||w>=6;
+  t.bj=Math.max(.04,(e?.07:.14)-(w-1)*.008);
+  t.bpn=Math.max(280,(e?340:520)-(w-1)*15);
+  t.cdn=Math.max(e?330:420,(e?460:560)-(w-1)*12);
+  t.dm=e?Math.max(.04,.1-(w-4)*.01):diff===0?Math.max(.12,.35-Math.max(0,w-3)*.03):w>=6?Math.max(.12,.35-(w-6)*.03):undefined;
+  if(e){t.dr=42;t.dh=95}
+}
+
+function allyE(t){
+  if(gather&&gq.includes(t))return followAI(t);
+  if(t.turret)return turretAI(t);
+  if(t.army)return armyAI(t);
+  if(t.dm!==undefined){const dg=dodge(t);if(dg)return dg}
+  const p=nearest(t);
+  if(p&&t.bn){
+    planAim(t,p);
+    if(t.aim!=null){const d=norm(t.aim-t.a);return{l:d<-.03,r:d>.03,s:Math.abs(d)<.045}}
+  }
+  return(p&&Math.hypot(p.x-t.x,p.y-t.y)<750&&clear(t,p))?ally(t):roamStep(t);
+}
+
+function endAI(t){
+  const p=nearest(t);
+  if(!p)return{};
+  const now=performance.now(),los=clear(t,p);
+  if(t.dm!==undefined){const dg=dodge(t);if(dg)return dg}
+  if(los&&!t.sawP){t.sawP=true;t.react=now+reactMs()}else if(!los)t.sawP=false;
+  if(t.bn){
+    planAim(t,p);
+    if(t.aim!=null){
+      if(!t.hadAim){t.hadAim=true;t.react=now+reactMs()}
+      const d=norm(t.aim-t.a);
+      return{l:d<-.03,r:d>.03,s:Math.abs(d)<.045&&now>=t.react};
+    }
+    t.hadAim=false;
+  }
+  if(!(now<t.on)){t.on=now+800;t.off=(Math.random()-.5)*t.err}
+  const tg=los?p:(path(t,p)||p);
+  const d=norm(Math.atan2(tg.y-t.y,tg.x-t.x)+(los?t.off||0:0)-t.a);
+  return{l:d<-.07,r:d>.07,f:Math.abs(d)<.7&&!(los&&Math.hypot(t.x-p.x,t.y-p.y)<(t.keep??120)),s:los&&now>=t.react&&Math.abs(d)<.1};
+}
+
+function path(t,p){
+  const now=performance.now();
+  if(!(now<t.ncT)){t.ncV=nextCell(t,p);t.ncT=now+200+rnd(100)}
+  return t.ncV;
+}
+
+// Schlacht-Bot (beide Teams gleich stark): Abprall-Schüsse, kein Ausweichen
+// Schwer: Gruppen kommen von verschiedenen Seiten auf den Schwerpunkt deines Teams zu (oben, Mitte, unten)
+// Der Gegner prüft alle paar Sekunden die Lage und wechselt die Taktik: angreifen, zurückziehen oder von den Seiten umgehen
+function strength(list){return list.reduce((a,t)=>a+(t.type==='heavy'?2:t.type==='sniper'?1.2:1),0)}
+function reassess(now){
+  if(now<etNext)return;
+  etNext=now+[16000,11000,7000][diff]*(.8+Math.random()*.4);
+  const en=tanks.filter(t=>t.alive&&t.team===1&&t.order),my=tanks.filter(t=>t.alive&&t.team===0);
+  if(!en.length)return;
+  const ratio=strength(en)/Math.max(1,strength(my));
+  let tac;
+  if(etPrev==='hold'&&etHoldN<2&&ratio<1)tac='hold';          // Rückzug erst beenden, wenn man sich gesammelt hat
+  else if(ratio<.7)tac='hold';                                  // klar unterlegen: zurückziehen
+  else if(etPrev==='hold')tac='push';                           // nach dem Rückzug gesammelt von mehreren Seiten vorstoßen
+  else if(ratio>1.2)tac='attack';
+  else tac=Math.random()<.5?'flank':'attack';
+  if(diff===0&&(tac==='flank'||tac==='push'))tac='attack';
+  etHoldN=tac==='hold'?etHoldN+1:0;etPrev=tac;etac=tac;
+  if(tac==='attack'){en.forEach(t=>{if(t.order==='hold'){t.order='attack';t.conv=true;t.dest=null}})}
+  else if(tac==='hold'){en.forEach(t=>{if(t.order==='attack'){t.order='hold';t.conv=false;t.flank=false;if(t.home){t.dest=t.home;t.destT=now+10000}}})}
+  else if(tac==='push'){en.forEach(t=>{t.order='attack';t.conv=true;t.dest=null;t.grp=rnd(3);t.flank=true;t.ft=now+8000})}
+  else{en.forEach(t=>{if(t.order==='attack'&&Math.random()<.6){t.grp=rnd(3);t.flank=true;t.ft=now+7000}})}
+  const el=document.getElementById('binfo');
+  if(el)el.textContent='Gegner-Taktik: '+({attack:'greift an',hold:'zieht sich zurück und sammelt sich',flank:'umgeht dich von den Seiten',push:'stößt gemeinsam von mehreren Seiten vor'})[tac];
+}
+function flankGoal(t){
+  let sx=0,sy=0,n=0;
+  for(const o of tanks)if(o.alive&&o.team===0){sx+=o.x;sy+=o.y;n++}
+  if(!n)return null;
+  const an=[-1.45,0,1.45][(t.grp||0)%3];
+  return{x:Math.max(40,Math.min(AW-40,sx/n+Math.cos(an)*480)),y:Math.max(40,Math.min(AH-40,sy/n+Math.sin(an)*480))};
+}
+
+function battleAI(t){
+  if(gather&&gq.includes(t)&&mode==='battle'&&phase==='fight')return followAI(t);
+  const p=nearest(t);
+  if(!p)return{};
+  if((t.team===1&&diff===2)||t.melee){const dg=dodge(t);if(dg)return dg}
+  planAim(t,p);
+  if(t.aim!=null){
+    const d=norm(t.aim-t.a);
+    return{l:d<-.03,r:d>.03,s:Math.abs(d)<.045};
+  }
+  if(t.flank){
+    const gl=flankGoal(t);
+    if(gl&&performance.now()<t.ft&&Math.hypot(gl.x-t.x,gl.y-t.y)>130){
+      const q=path(t,gl)||gl,e=norm(Math.atan2(q.y-t.y,q.x-t.x)-t.a);
+      return{l:e<-.07,r:e>.07,f:Math.abs(e)<.7};
+    }
+    t.flank=false;
+  }
+  if(t.order==='hold'){
+    if(t.dest){
+      const q=path(t,t.dest);
+      if(q&&performance.now()<t.destT&&Math.hypot(t.dest.x-t.x,t.dest.y-t.y)>30){
+        const e=norm(Math.atan2(q.y-t.y,q.x-t.x)-t.a);
+        return{l:e<-.07,r:e>.07,f:Math.abs(e)<.7};
+      }
+      t.dest=null;
+    }
+    if(!clear(t,p))return{};
+    const d=norm(Math.atan2(p.y-t.y,p.x-t.x)-t.a);
+    return{l:d<-.05,r:d>.05,s:Math.abs(d)<.1};
+  }
+  return botOld(t,p);
+}
+
+// Mündung: liegt die Wand direkt vor dem Rohr, startet die Kugel vor der Wand statt dahinter (verhindert Schießen durch Wände)
+function muzzle(t,a){
+  let d=20;
+  for(let s=4;s<=20;s+=2){if(wallAt(t.x+Math.cos(a)*s,t.y+Math.sin(a)*s)){d=Math.max(0,s-4);break}}
+  return{x:t.x+Math.cos(a)*d,y:t.y+Math.sin(a)*d};
+}
+
+function wallAtOld(x,y){
+  for(let i=0;i<rects.length;i++){
+    const r=rects[i];
+    if(x>r[0]-3&&x<r[0]+r[2]+3&&y>r[1]-3&&y<r[1]+r[3]+3)return true;
+  }
+  return false;
+}
+
+// Simuliert einen Schuss mit höchstens einem Abprall; true, wenn er das Ziel trifft und nicht den Schützen selbst
+function shotHits(t,p,ang){
+  let vx=Math.cos(ang)*4.2,vy=Math.sin(ang)*4.2,n=0;
+  const b=muzzle(t,ang);
+  const WL=(x,y)=>mode==='base'?!!baseWall(x,y,t.mount&&n===0?0:2):wallAt(x,y);
+  for(let s=0;s<230;s++){
+    let w=false;
+    b.x+=vx;if(WL(b.x,b.y)){b.x-=vx;vx=-vx;w=true}
+    b.y+=vy;if(WL(b.x,b.y)){b.y-=vy;vy=-vy;w=true}
+    if(w&&++n>1)return false;
+    if(n>0&&Math.hypot(t.x-b.x,t.y-b.y)<15)return false;
+    if(Math.hypot(p.x-b.x,p.y-b.y)<15)return true;
+  }
+  return false;
+}
+
+function nearest(t){
+  const b=nearestRaw(t);
+  if(!b)return null;
+  const k=t.tg;
+  if(k&&k.alive&&k.team!==t.team&&k!==b){
+    const dk=Math.hypot(k.x-t.x,k.y-t.y),db=Math.hypot(b.x-t.x,b.y-t.y);
+    if(dk<db*1.35+60)return k;
+  }
+  t.tg=b;
+  return b;
+}
+function nearestRaw(t){
+  let best=null,bd=1e9;
+  for(const o of tanks)if(o.alive&&o.team!==t.team){
+    const d=Math.hypot(o.x-t.x,o.y-t.y);
+    if(d<bd){bd=d;best=o}
+  }
+  return best;
+}
+
+// Gegner: Abprall-Schüsse mit Zielfehler und Denkpause
+function botInput(t,p){
+  const now=performance.now();
+  if(!t.alive||!p.alive)return{};
+  if(!(now<t.pn)){
+    t.pn=now+(near(t)>=2?dd().pnn:dd().pn);t.aim=null;
+    let bd=9;
+    for(let i=0;i<90;i++){
+      const ang=i/90*2*Math.PI;
+      if(shotHits(t,p,ang)){const d=Math.abs(norm(ang-t.a));if(d<bd){bd=d;t.aim=ang+(Math.random()-.5)*dd().j}}
+    }
+  }
+  if(t.aim!=null){
+    const d=norm(t.aim-t.a);
+    return{l:d<-.03,r:d>.03,s:Math.abs(d)<.045};
+  }
+  return botOld(t,p);
+}
+
+function botOld(t,p){
+  const out={};
+  if(!t.alive||!p.alive)return out;
+  const los=clear(t,p);
+  const tg=los?p:(path(t,p)||p);
+  const d=norm(Math.atan2(tg.y-t.y,tg.x-t.x)-t.a);
+  out.l=d<-.07;out.r=d>.07;
+  out.f=Math.abs(d)<.7&&!(los&&Math.hypot(t.x-p.x,t.y-p.y)<90);
+  out.s=los&&Math.abs(d)<.1;
+  return out;
+}
+
+// Ausweichen: weicht seitlich aus, wenn eine feindliche Kugel auf ihn zukommt (nur etwa 8 % der Kugeln bemerkt er nicht)
+function dodge(t){
+  let best=null,bt=t.dh??(diff===2?90:70);
+  for(const b of bullets){
+    if(b.team===t.team||(mode==='battle'&&!clumpMode&&!t.melee&&b.ord!=='hold'))continue;
+    const rx=t.x-b.x,ry=t.y-b.y,tc=(rx*b.vx+ry*b.vy)/(b.vx*b.vx+b.vy*b.vy);
+    if(tc<=0||tc>=bt)continue;
+    const cx=rx-b.vx*tc,cy=ry-b.vy*tc;
+    if(Math.hypot(cx,cy)<(t.dr??(diff===2?40:32))){bt=tc;best={b,cx,cy}}
+  }
+  if(!best){t.thr=false;return null}
+  if(!t.thr){t.thr=true;t.miss=Math.random()<(t.dm??(mode==='battle'?(clumpMode?.08:.25):dd().miss))}
+  if(t.miss)return null;
+  const {b,cx,cy}=best,L=Math.hypot(b.vx,b.vy);
+  let px=-b.vy/L,py=b.vx/L;
+  if(px*cx+py*cy<0){px=-px;py=-py}
+  if(wallAt(t.x+px*34,t.y+py*34)){px=-px;py=-py;if(wallAt(t.x+px*34,t.y+py*34))return null}
+  const d=norm(Math.atan2(py,px)-t.a);
+  const rv=Math.abs(d)>1.7,e2=rv?norm(d+Math.PI):d;
+  return{l:e2<-.1,r:e2>.1,f:!rv&&Math.abs(e2)<1.3,b:rv&&Math.abs(e2)<1.3};
+}
+
+// Hilfs-Bots: gehen auf verschiedene Seiten des Gegners, um ihn einzukreisen, und schießen bei freier Sicht
+function ally(t){
+  const e=nearest(t);
+  if(!e)return{};
+  const los=clear(t,e),dist=Math.hypot(e.x-t.x,e.y-t.y);
+  const ref=tanks[me].alive?tanks[me]:t;
+  const a0=Math.atan2(ref.y-e.y,ref.x-e.x)+(t.side?1:-1)*2.1;
+  const goal={x:Math.min(AW-30,Math.max(30,e.x+Math.cos(a0)*170)),y:Math.min(AH-30,Math.max(30,e.y+Math.sin(a0)*170))};
+  const tg=los?e:(nextCell(t,goal)||nextCell(t,e)||e);
+  const d=norm(Math.atan2(tg.y-t.y,tg.x-t.x)-t.a);
+  return{l:d<-.07,r:d>.07,f:Math.abs(d)<.7&&!(los&&dist<220),s:los&&Math.abs(d)<.1};
+}
+
+function input(i){
+  const t=tanks[i];
+  if(i===me){
+    const c=ctl[0];
+    if(joy.s){const d=norm(joy.ang-t.a),w=Math.max(-1,Math.min(1,d*3))*1.8;return{f:joy.s*Math.max(0,Math.cos(d)),l:Math.max(-w,0),r:Math.max(w,0),s:keys[c.s]}}
+    return{f:keys[c.f],b:keys[c.b],l:keys[c.l],r:keys[c.r],s:keys[c.s]};
+  }
+  if(mode==='base')return t.team===1?baseAI(t):baseAlly(t);
+  if(mode==='endless')return t.team===1?endAI(t):allyE(t);
+  if(mode==='battle')return battleAI(t);
+  if(t.team===1){
+    if(!bot){const c=ctl[1];return{f:keys[c.f],b:keys[c.b],l:keys[c.l],r:keys[c.r],s:keys[c.s]}}
+    const p=nearest(t);
+    return p?(dodge(t)||botInput(t,p)):{};
+  }
+  return ally(t);
+}
+
+function update(k,now){
+  if((mode==='battle'||mode==='base')&&phase==='place')return;
+  planCnt=0;
+  if(mode==='battle'&&phase==='fight'&&!resetAt)releaseHolds(now);
+  if(!resetAt){
+    tanks.forEach((t,i)=>{
+      if(!t.alive)return;
+      const c=input(i),boost=(mode==='endless'||mode==='base')?(gather&&gq.includes(t)&&i!==me?(t.sp||1.5):(t.spd||1)):t.team===1&&bot&&mode==='duel'?dd().sp:(gather&&mode==='battle'&&gq.includes(t)&&i!==me?(t.sp||1.5):(mode==='battle'?(t.team===1?dd().bsp:1)*(t.tspd||1):(mode==='duel'&&t.ally&&diff===2?.9:1)));
+      t.a+=((+c.r||0)-(+c.l||0))*.055*k*boost;
+      const m=((+c.f||0)-(+c.b||0))*2.4*k*boost;
+      t.x+=Math.cos(t.a)*m;t.y+=Math.sin(t.a)*m;
+      push(t,13);
+      if(mode==='duel'&&bot&&t.team===1&&diff>0)trySalvo(t,i,now);
+      if(mode==='battle'&&t.team===1&&diff===2)salvoB(t,i,now);
+      if(mode==='endless'&&t.elite)trySalvo(t,i,now);
+      if(mode==='endless'&&t.team===1&&t.salv)troopSalvo(t,i,now);
+      if(c.s&&now>t.cd&&bullets.filter(b=>b.o===i).length<5&&(i===me||t.mount||(t.team===1&&mode==='duel')||safeShot(t))){
+        const human=i===me||(mode==='duel'&&t.team===1&&!bot);
+        t.cd=now+(human?300:(mode==='endless'||mode==='base')?(t.cdn||500):mode==='battle'?(t.team===1?dd().bcd:800)*(t.tcd||1):t.team===1?(near(t)>=2?dd().cdn:dd().cd):(diff===2?850:600));
+        if(i===me)sfx('shot');const mz=muzzle(t,t.a);bullets.push({x:mz.x,y:mz.y,vx:Math.cos(t.a)*4.2,vy:Math.sin(t.a)*4.2,o:i,team:t.team,ord:t.order,mine:i===me,mb:t.mb,dmg:t.dmg,gh:!!t.mount,n:0,die:now+7000});
+      }
+    });
+  }
+  if(!resetAt)for(let i=0;i<tanks.length;i++)for(let j=i+1;j<tanks.length;j++){
+    const a=tanks[i],c=tanks[j];
+    if(!a.alive||!c.alive||a.team!==c.team||a.turret||c.turret)continue;
+    const dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy);
+    if(d<26&&d>.01){
+      const s=Math.min(1.2*k,(26-d)/2);
+      a.x-=dx/d*s;a.y-=dy/d*s;c.x+=dx/d*s;c.y+=dy/d*s;
+      push(a,13);push(c,13);
+    }
+  }
+  if(mode==='endless'&&!resetAt)endlessTick(now);
+  if(mode==='base'&&!resetAt){baseTick(now);checkGrow()}
+  if(mode==='battle'&&phase==='fight'&&!resetAt)reassess(now);
+  bullets=bullets.filter(b=>now<b.die);
+  for(const b of bullets){
+    let bounced=false;
+    b.x+=b.vx*k;if(inWall(b)){bwHit(b);b.x-=b.vx*k;b.vx*=-1;bounced=true}
+    b.y+=b.vy*k;if(inWall(b)){bwHit(b);b.y-=b.vy*k;b.vy*=-1;bounced=true}
+    if(bounced&&++b.n>(b.mb||1))b.die=0;
+    if(bounced&&mode==='base')b.gh=false;
+    if(!resetAt)tanks.some((t,ti)=>{
+      if(t.alive&&!t.mount&&(t.team!==b.team||(ti===b.o&&ti!==me))&&Math.hypot(t.x-b.x,t.y-b.y)<(t.hr||15)){if(absorb(t,ti,b))return false;if(t.hp>1){t.hp--;t.hit=performance.now()+180;b.die=0;sfx('kill');return true}t.alive=false;b.die=0;if(b.mine&&t.team!==b.team)myKills++;sfx(ti===me?'hit':'kill');if(ti===me)vib(200);return true}
+    });
+  }
+  if(!resetAt){
+    if(mode!=='endless'&&mode!=='base'&&!tanks[me].alive){let nx=-1,bs=-1;tanks.forEach((t,i)=>{if(!t.alive||t.team!==0)return;const sc=((t.type||'std')==='std'?2:0)+(t.order==='attack'?1:0);if(sc>bs){bs=sc;nx=i}});if(nx>=0)me=nx}
+    const mine=tanks.some(t=>t.alive&&t.team===0),foe=tanks.some(t=>t.alive&&t.team===1);
+    if(mode==='base'?!(tanks.find(t=>t.tower)||{alive:true}).alive:mode==='endless'?!tanks[me].alive:(!mine||!foe)){
+      if(mine)score[0]++;else if(foe)score[1]++;
+      msg=(mode==='endless'||mode==='base')?'Game Over bei Welle '+wave+' (Kills: '+kills+')':!mine&&!foe?'Unentschieden':mode==='battle'?(mine?'Dein Team gewinnt!':'Das Gegner-Team gewinnt'):mine?'Punkt für Spieler 1':'Punkt für '+(bot?'den Bot':'Spieler 2');
+      resetAt=now+1800;updateScore();recEnd(mine);sfx(mode==='endless'||mode==='base'||!mine?'over':'win');vib(mode==='endless'||mode==='base'||!mine?300:100);
+    }
+  }
+  if(resetAt&&now>resetAt){newRound();if(mode==='endless'||mode==='base'){running=false;paused=true;showStart(mode)}}
+}
+
+function draw(){
+  g.setTransform(1,0,0,1,0,0);g.fillStyle=col.bg;g.fillRect(0,0,VW,VH);updateCam();
+  g.setTransform(cam.z,0,0,cam.z,cam.ox-cam.x*cam.z,cam.oy-cam.y*cam.z);
+  g.fillStyle=col.bg;g.fillRect(0,0,AW,AH);drawOverlay();
+  g.fillStyle=col.wall;for(const r of rects)if(r[0]<cam.x+VW+10&&r[0]+r[2]>cam.x-10&&r[1]<cam.y+VH+10&&r[1]+r[3]>cam.y-10)g.fillRect(r[0],r[1],r[2],r[3]);drawBase();
+  g.fillStyle=col.fg;
+  bullets.forEach(b=>{g.beginPath();g.arc(b.x,b.y,3,0,7);g.fill()});
+  tanks.forEach((t,i)=>{
+    const c=t.ally?col.a:col.p[t.team];
+    if(mode==='endless'&&!t.alive&&t.team===1)return;
+    if(!t.alive){
+      g.globalAlpha=.35;g.fillStyle=c;
+      g.beginPath();g.arc(t.x,t.y,20,0,7);g.fill();g.globalAlpha=1;return;
+    }
+    g.save();g.translate(t.x,t.y);g.rotate(t.a);
+    g.fillStyle=c;if(t.tower){g.fillRect(-26,-26,52,52);g.strokeStyle=col.fg;g.lineWidth=3;g.strokeRect(-26,-26,52,52);g.fillStyle=col.fg;g.fillRect(-9,-9,18,18)}else if(t.arty){g.fillRect(-15,-11,30,22);g.strokeStyle=col.fg;g.lineWidth=2;g.strokeRect(-15,-11,30,22)}else if(t.tesla){g.beginPath();g.arc(0,0,12,0,7);g.fill();g.strokeStyle=col.fg;g.lineWidth=2;g.stroke();for(let q=0;q<4;q++){const an=q*1.5708+.785;g.beginPath();g.moveTo(Math.cos(an)*12,Math.sin(an)*12);g.lineTo(Math.cos(an)*19,Math.sin(an)*19);g.stroke()}}else if(t.turret){g.beginPath();g.arc(0,0,11,0,7);g.fill();g.strokeStyle=col.fg;g.lineWidth=2;g.stroke()}else if(t.type==='heavy')g.fillRect(-15,-12,30,24);else if(t.type==='melee')g.fillRect(-11,-8,22,16);else g.fillRect(-13,-10,26,20);
+    if(t.type==='heavy'||t.hit>performance.now()){g.strokeStyle=t.hit>performance.now()?col.fg:col.wall;g.lineWidth=3;g.strokeRect(-15,-12,30,24)}
+    g.fillStyle=col.fg;{const bl=t.tesla?3:t.arty?18:t.tower?34:t.turret?26:t.type==='sniper'?34:22,bw=t.tesla?3:t.arty?10:t.tower?8:t.turret?6:t.type==='sniper'?4:5;g.fillRect(0,-bw/2,bl,bw)}
+    g.beginPath();g.arc(0,0,6,0,7);g.fill();
+    if(i===me){g.strokeStyle=col.fg;g.lineWidth=2;g.beginPath();g.arc(0,0,19,0,7);g.stroke()}
+    if(t.flash>performance.now()){g.strokeStyle=c;g.lineWidth=4;g.beginPath();g.arc(0,0,26,0,7);g.stroke()}
+    if(i===me&&joker&&mode==='endless'){g.save();g.setLineDash([5,4]);g.strokeStyle=col.a;g.lineWidth=3;g.beginPath();g.arc(0,0,22,0,7);g.stroke();g.restore()}
+    if(i===me&&performance.now()<invT){g.strokeStyle=col.a;g.lineWidth=4;g.beginPath();g.arc(0,0,23,0,7);g.stroke()}
+    g.restore();
+  });
+  drawMarks();drawShells();g.setTransform(1,0,0,1,0,0);updateHud();
+  if(msg){
+    g.fillStyle=col.fg;g.font='700 30px system-ui,sans-serif';g.textAlign='center';
+    g.fillText(msg,VW/2,VH/2+10);
+  }
+}
+
+let last=performance.now();
+function loop(now){
+  const k=Math.min((now-last)/16.667,3);last=now;
+  if(running&&mode==='base'&&phase==='place'&&performance.now()>=bEnd)startBaseWave();
+  if(running){update(k,now);draw()}else if(paused)draw();
+  requestAnimationFrame(loop);
+}
+
+document.querySelectorAll('#touch .fire').forEach(el=>{
+  const k=el.dataset.k,set=v=>e=>{e.preventDefault();keys[k]=v;el.classList.toggle('on',v)};
+  el.addEventListener('pointerdown',set(true));
+  ['pointerup','pointercancel','pointerleave'].forEach(n=>el.addEventListener(n,set(false)));
+  el.addEventListener('contextmenu',e=>e.preventDefault());
+});
+skillBtn.addEventListener('pointerdown',e=>{e.preventDefault();(mode==='battle'||mode==='endless')?toggleGather():skill()});
+skillBtn.addEventListener('contextmenu',e=>e.preventDefault());
+
+const joyEl=document.getElementById('joy'),knob=document.getElementById('knob');
+let jid=null;
+function joyMove(e){
+  const r=joyEl.getBoundingClientRect(),R0=r.width/2,kr=knob.offsetWidth/2;
+  let dx=(e.clientX-(r.left+R0))/R0,dy=(e.clientY-(r.top+R0))/R0;
+  const len=Math.hypot(dx,dy);
+  if(len>1){dx/=len;dy/=len}
+  knob.style.transform='translate('+dx*(R0-kr)+'px,'+dy*(R0-kr)+'px)';
+  const m=Math.min(1,len);
+  if(m<.12){joy.s=0;return}
+  joy.s=(m-.12)/.88;joy.ang=Math.atan2(dy,dx);
+  
+  
+  
+}
+const joyEnd=e=>{if(e.pointerId!==jid)return;jid=null;joy.s=0;knob.style.transform=''};
+joyEl.addEventListener('pointerdown',e=>{e.preventDefault();joyEl.setPointerCapture(e.pointerId);jid=e.pointerId;joyMove(e)});
+joyEl.addEventListener('pointermove',e=>{if(e.pointerId===jid)joyMove(e)});
+['pointerup','pointercancel','lostpointercapture'].forEach(n=>joyEl.addEventListener(n,joyEnd));
+joyEl.addEventListener('contextmenu',e=>e.preventDefault());
+
+const modeBtn=document.getElementById('mode');
+function setMode(){
+  modeBtn.textContent=bot?'Gegner: Bot (tippen für 2 Spieler)':'Gegner: Mensch (tippen für Bot)';
+  document.getElementById('n2').textContent=bot?'Bot':'Spieler 2';
+}
+modeBtn.addEventListener('click',()=>{bot=!bot;score=[0,0];updateScore();setMode();newRound();modeBtn.blur()});
+
+const bpanel=document.getElementById('bpanel'),touchEl=document.getElementById('touch'),hint=document.getElementById('bhint'),goBtn=document.getElementById('bgo');
+const ordA=document.getElementById('ordA'),ordH=document.getElementById('ordH');
+const typeRow=document.getElementById('typerow'),bbuild=document.getElementById('bbuild'),abilEl=document.getElementById('abil'),hud=document.getElementById('hud'),hudtxt=document.getElementById('hudtxt'),mini=document.getElementById('mini'),mg=mini.getContext('2d');
+function setOrd(o){pickOrder=o;ordA.classList.toggle('sel',o==='attack');ordH.classList.toggle('sel',o==='hold')}
+ordA.onclick=()=>setOrd('attack');
+ordH.onclick=()=>setOrd('hold');
+const STOCK={std:10,sniper:2,heavy:2,melee:2};
+function typeLeft(ty){return STOCK[ty]-tanks.filter(t=>t.ally&&t.team===0&&(t.type||'std')===ty).length}
+function updateTypeLabels(){
+  const N={std:'Normal',sniper:'Sniper',heavy:'Schwer',melee:'Nahkampf'};
+  typeRow.querySelectorAll('[data-ty]').forEach(b=>{const ty=b.dataset.ty,t=N[ty]+' '+typeLeft(ty)+'/'+STOCK[ty];if(b.textContent!==t)b.textContent=t});
+}
+typeRow.querySelectorAll('[data-ty]').forEach(b=>{b.onclick=()=>{pickType=b.dataset.ty;typeRow.querySelectorAll('[data-ty]').forEach(x=>x.classList.toggle('sel',x===b))}});
+function updatePanel(){
+  const pl=mode==='battle'&&phase==='place',bb=mode==='base'&&phase==='place';
+  bpanel.hidden=!pl;bbuild.hidden=!(bb&&(running||paused));touchEl.hidden=pl||bb;abilEl.hidden=mode!=='endless'||!running;
+  document.getElementById('binfo').textContent='';
+  if(!pl)return;
+  const n=tanks.length,u=tanks.filter((t,i)=>i&&!t.order).length;
+  hint.textContent=n===0?'Tippe in deine Hälfte (links), um dich selbst zu platzieren.':n<17?'Bot '+n+' von 16: tippe in deine Hälfte. Hast du einen Befehl gewählt, kannst du platzierte Bots antippen, um ihn zu vergeben.':(u?'Alle platziert. Wähle ▶ oder ■ und tippe die Bots an, die diesen Befehl bekommen sollen. Noch ohne Befehl (?): '+u:'Alle Befehle vergeben. Du kannst sie noch ändern, dann starte den Kampf.');
+  goBtn.disabled=n<17||u>0;updateTypeLabels();
+}
+goBtn.onclick=startFight;
+document.getElementById('breset').onclick=()=>{tanks=[];updatePanel()};
+document.getElementById('bauto').onclick=()=>{
+  const free=[];
+  for(let c=0;c<C/2;c++)for(let r=0;r<R;r++)if(!tanks.some(t=>Math.floor(t.x/S)===c&&Math.floor(t.y/S)===r))free.push([c,r]);
+  const pool=[];
+  for(const ty of ['std','sniper','heavy','melee'])for(let k=0;k<typeLeft(ty);k++)pool.push(ty);
+  const pl=shuf(pool);
+  shuf(free).slice(0,17-tanks.length).forEach(([c,r])=>{
+    const o={x:(c+.5)*S,y:(r+.5)*S,a:0,alive:true,cd:0,team:0};
+    if(tanks.length){o.ally=true;o.order=Math.random()<.5?'attack':'hold';setType(o,pl.pop()||'std')}
+    tanks.push(o);
+  });
+  updatePanel();
+};
+cv.addEventListener('pointerdown',e=>{
+  if(!running||phase!=='place'||(mode!=='battle'&&mode!=='base'))return;
+  const r=cv.getBoundingClientRect();
+  const wx=((e.clientX-r.left)/r.width*VW-cam.ox)/cam.z+cam.x,wy=((e.clientY-r.top)/r.height*VH-cam.oy)/cam.z+cam.y;
+  mode==='base'?baseTap(wx,wy):placeAt(wx,wy);
+});
+
+const menuEl=document.getElementById('menu'),gameEl=document.getElementById('game');
+function show(inGame,m){
+  running=inGame;menuEl.hidden=inGame;gameEl.hidden=!inGame;
+  joy.s=0;for(const k in keys)keys[k]=false;
+  if(inGame){
+    mode=m;phase='fight';lastPlace=[];
+    modeBtn.hidden=mode!=='duel';skillBtn.hidden=false;skillBtn.textContent=mode==='duel'?'2 Bots':'Sammeln';skillBtn.classList.remove('on','used');gather=false;
+    document.querySelectorAll('.help.tl,.help.kbd').forEach(h=>{h.hidden=mode!=='duel'});
+    document.getElementById('bhelp').hidden=mode!=='battle';
+    setMode();if(mode==='battle')document.getElementById('n2').textContent='Gegner';
+    document.querySelector('.sb').hidden=mode==='endless'||mode==='base';gameEl.classList.toggle('fill',mode==='endless'||mode==='base');if(mode==='base')skillBtn.hidden=true;
+    score=[0,0];updateScore();newRound();updatePanel();last=performance.now();
+    if(m==='battle'){running=true;paused=false}else{running=false;paused=true;showStart(m)}
+  }else{bpanel.hidden=true;abilEl.hidden=true;hud.hidden=true;startov.hidden=true;paused=false;bbuild.hidden=true;showRecs()}
+}
+const startov=document.getElementById('startov');
+function showStart(m){startov.hidden=false;updatePanel()}
+document.getElementById('sgo').onclick=()=>{startov.hidden=true;paused=false;running=true;last=performance.now();updatePanel()};
+const helpov=document.getElementById('helpov'),helptxt=document.getElementById('helptxt');
+document.getElementById('helpBtn').onclick=e=>{
+  const src=mode==='base'?['#xhelp']:mode==='endless'?['#ehelp']:mode==='battle'?['#bhelp']:['.help.kbd','.help.tl'];
+  helptxt.innerHTML='';
+  src.forEach(s=>{const p=document.createElement('p');p.innerHTML=document.querySelector(s).innerHTML;helptxt.appendChild(p)});
+  helpov.hidden=false;e.currentTarget.blur();
+};
+document.getElementById('hclose').onclick=()=>{helpov.hidden=true};
+helpov.addEventListener('pointerdown',e=>{if(e.target===helpov)helpov.hidden=true});
+document.querySelectorAll('#diffrow .btn').forEach(b=>{b.onclick=()=>{diff=+b.dataset.d;showRecs();document.querySelectorAll('#diffrow .btn').forEach(x=>x.classList.toggle('sel',x===b))}});
+abilEl.querySelectorAll('button').forEach(b=>{b.onclick=()=>useAbility(b.dataset.a)});
+document.getElementById('start-endless').addEventListener('click',()=>show(true,'endless'));
+document.getElementById('start-base').addEventListener('click',()=>show(true,'base'));
+bbuild.querySelectorAll('[data-t]').forEach(b=>{b.onclick=()=>{btool=b.dataset.t;bbuild.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('sel',x===b))}});
+document.getElementById('bwave').onclick=()=>{if(running&&mode==='base'&&phase==='place')startBaseWave()};
+document.getElementById('start-duell').addEventListener('click',()=>show(true,'duel'));
+document.getElementById('start-battle').addEventListener('click',()=>show(true,'battle'));
+document.getElementById('back').addEventListener('click',e=>{show(false);e.currentTarget.blur()});
+
+const sndBtn=document.getElementById('snd');
+sndBtn.textContent=sndOn?'Ton an':'Ton aus';
+sndBtn.onclick=()=>{sndOn=!sndOn;try{localStorage.setItem('tdSnd',sndOn?'1':'0')}catch(e){}sndBtn.textContent=sndOn?'Ton an':'Ton aus';sfx('ab')};
+setMode();showRecs();newRound();updateScore();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
